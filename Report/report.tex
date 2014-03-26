@@ -16,7 +16,12 @@
 \maketitle
 \newpage
 
+\tableofcontents
+
+\newpage
+
 \section*{Introduction}
+\addcontentsline{toc}{section}{Introduction}
 In the last decades, numerous devices have been developped in order to capture and digitize our world. Among them, 3D scanners aim at capturing the geometry of the objects surounding us. Statues, monuments but also industrial parts, landscapes : all these can be digitized into a 3D point cloud. But a 3D point cloud isn't enough for a correct visualization by human beings. Thus the reconstruction of the surface is needed to obtain a more comprehensible object.
 
 Because of the numerous fields it covers -- cultural, industrial, medical -- Surface reconstruction is a widely studied subject in Computer Science. In this report, we will present the three main categories of algorithms used to perform surface reconstruction. For each category we will describe two or more precise algorithms.
@@ -37,24 +42,28 @@ The advantage of Delaunay-based algorithms is that the triangulation created is 
 
 We describe two different Delaunay based algorithms : the Power Crust algorithm and the Cocone algorithm.
 \subsection{Power crust algorithm}
-
+The Power crust construct
+The power cr, st is a construction which takes a sample of points
+fiom the surface of a three-dimensional object and produces a sur-
+lace mesh and an approximate medial axis. The approach is to first
+approximate the medial axis transform (MAT) o f the object. We
+then use an inverse transform to produce the surface representation
+fi'om the MAT.
 \subsection{Cocone algorithm}
-% TO DO
-%  - What is a Delaunay triangulation / Voronoi diagram
-%  - Describe the idea
-%  - Describe Power crust
-%  - Describe Cocone
+\newpage
 
 \section{Region-growing algorithms}
-\subesection{General idea}
+\subsection{General idea}
 A classic region-growing algorithm begins by initiating a triangle as an initial region and then iterates to link new triangles on the region's boundaries. This type of algorithm is very fast. Most of the time, each point of the point cloud is considered only once for the triangulation. The disadvantage is that the reconstruction relies heavily on parameters chosen by the user and on the sampling of the point cloud. Moreover this method can create small holes in the surface when poor data  exists -- due to noise for example. 
 
 We describe two different region-growing algorithms : the Ball Point algorithm and the Fast Reconstruction algorithm of the Point Cloud Library.
 
 \subsection{Ball Point algorithm}
+The idea of the BPA is very simple : three points form a triangle if a ball of radius \rho touches them without containing any other points. Starting with a seed triangle, the sphere pivots around an edge of the triangle until it touches another point. It then formed a new triangle. We loop this process until all reachable edges have been considered.
+
 
 \subsection{Fast Reconstruction algorithm (PCL)}
-
+\newpage
 
 \section{Implicit surface algorithms}
 \subsection{General idea}
@@ -74,5 +83,6 @@ We describe four different implicit surface algorithms : the Poisson algorithm, 
 \subsection{Marching cubes algorithm}
 
 
-\section{Conclusion}
+\section*{Conclusion}
+\addcontentsline{toc}{section}{Conclusion}
 \end{document}
