@@ -33,6 +33,8 @@ The Voronoi diagram is the dual of the Delaunay triangulation.
 \subsection{General idea}
 The Delaunay-based algorithm can be divided into two main steps. First, it computes a geometric triangulation of the finite set of points via the Delaunay triangulation or the Voronoi diagram. Then, it extracts a collection of facets chosen so that they are close to the actual surface.
 
+The advantage of Delaunay-based algorithms is that the triangulation created is more robust than other approaches. Delaunay triangulation comes with a variety of theoretical guarantees. However, the Delaunay triangulation is very expensive to compute, thus these algorithms are very expensive for large point clouds.
+
 We describe two different Delaunay based algorithms : the Power Crust algorithm and the Cocone algorithm.
 \subsection{Power crust algorithm}
 
@@ -44,10 +46,15 @@ We describe two different Delaunay based algorithms : the Power Crust algorithm 
 %  - Describe Cocone
 
 \section{Region-growing algorithms}
-% TO DO
-%  - What is a Region growing algo
-%  - Describe Ball Point Algorithm
-%  - Describe Fast Algo from PCL
+\subesection{General idea}
+A classic region-growing algorithm begins by initiating a triangle as an initial region and then iterates to link new triangles on the region's boundaries. This type of algorithm is very fast. Most of the time, each point of the point cloud is considered only once for the triangulation. The disadvantage is that the reconstruction relies heavily on parameters chosen by the user and on the sampling of the point cloud. Moreover this method can create small holes in the surface when poor data  exists -- due to noise for example. 
+
+We describe two different region-growing algorithms : the Ball Point algorithm and the Fast Reconstruction algorithm of the Point Cloud Library.
+
+\subsection{Ball Point algorithm}
+
+\subsection{Fast Reconstruction algorithm (PCL)}
+
 
 \section{Implicit surface algorithms}
 % TO DO
