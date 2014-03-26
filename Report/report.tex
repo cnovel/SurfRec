@@ -57,12 +57,21 @@ We describe two different region-growing algorithms : the Ball Point algorithm a
 
 
 \section{Implicit surface algorithms}
-% TO DO
-%  - What is implicit surface algo
-%  - Describe Poisson
-%  - Describe Radial Basis Function
-%  - Describe Level Set
-%  - Describe Marching Cubes
+\subsection{General idea}
+In an implicit surface algorithm, a signed distance function is defined from the sample points and computed. Then given the zero-set of the signed distance function, an approximate triangulated surface is constructed.
+
+There is a major difference between Implicit surface algorithms and Region-growing or Delaunay-based algorithms. Region-growing and Delaunay based methods interpolate sample points, mean that the reconstructed surface lies on the sample points. The implicit surface approach approximates sample points and can lack accuracy. But one advantage is that implicit surface methods are ideal in the case of highly noised data.
+
+We describe four different implicit surface algorithms : the Poisson algorithm, the Radial Basis Function algorithm, the Level Set algorithm and the Marching Cubes algorithm.
+
+
+\subsection{Poisson algorithm}
+
+\subsection{Radial Basis Function algorithm}
+
+\subsection{Level Set algorithm}
+
+\subsection{Marching cubes algorithm}
 
 
 \section{Conclusion}
