@@ -16,11 +16,27 @@
 \maketitle
 \newpage
 
-\section{Introduction}
+\section*{Introduction}
 In the last decades, numerous devices have been developped in order to capture and digitize our world. Among them, 3D scanners aim at capturing the geometry of the objects surounding us. Statues, monuments but also industrial parts, landscapes : all these can be digitized into a 3D point cloud. But a 3D point cloud isn't enough for a correct visualization by human beings. Thus the reconstruction of the surface is needed to obtain a more comprehensible object.
+
 Because of the numerous fields it covers -- cultural, industrial, medical -- Surface reconstruction is a widely studied subject in Computer Science. In this report, we will present the three main categories of algorithms used to perform surface reconstruction. For each category we will describe two or more precise algorithms.
 
+\newpage
+
 \section{Delaunay-based algorithms}
+Delaunay-based algorithms are based on the Delaunay triangulation of a point cloud and the Voronoi diagram of a point cloud. In 2D, a Delaunay triangulation of a set of points $P$ is a triangulation such that no point in $P$ is inside the circumcircle of any triangle of the triangulation. We can generalize Delaunay triangulation in a $n$-dimension space, using simplex. For surface reconstruction, $n = 3$ so that the property becomes : a Delaunay triangulation of a set of points $P$ such that no point in $P$ is inside the circumspeher of any tetrahedron of the triangulation.
+
+A Voronoi diagram is a way to divide the space. Given a set of points $\{p_i\}$,  for each point there will be a corresponding region $R_i = \{x | dist(p_i,x) < dist(p_j,x) ; i \ne j\}$. The regions are called Voronoi cells.
+
+The Voronoi diagram is the dual of the Delaunay triangulation.
+
+\subsection{General idea}
+The Delaunay-based algorithm can be divided into two main steps. First, it computes a geometric triangulation of the finite set of points via the Delaunay triangulation or the Voronoi diagram. Then, it extracts a collection of facets chosen so that they are close to the actual surface.
+
+We describe two different Delaunay based algorithms : the Power Crust algorithm and the Cocone algorithm.
+\subsection{Power crust algorithm}
+
+\subsection{Cocone algorithm}
 % TO DO
 %  - What is a Delaunay triangulation / Voronoi diagram
 %  - Describe the idea
