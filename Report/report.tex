@@ -41,15 +41,58 @@ The Delaunay-based algorithm can be divided into two main steps. First, it compu
 The advantage of Delaunay-based algorithms is that the triangulation created is more robust than other approaches. Delaunay triangulation comes with a variety of theoretical guarantees. However, the Delaunay triangulation is very expensive to compute, thus these algorithms are very expensive for large point clouds.
 
 We describe two different Delaunay based algorithms : the Power Crust algorithm and the Cocone algorithm.
+
 \subsection{Power crust algorithm}
-The Power crust construct
-The power cr, st is a construction which takes a sample of points
-fiom the surface of a three-dimensional object and produces a sur-
-lace mesh and an approximate medial axis. The approach is to first
-approximate the medial axis transform (MAT) o f the object. We
-then use an inverse transform to produce the surface representation
-fi'om the MAT.
+The Powercrust algorithm compute an approximate medial axis of the 3D point cloud $S$ using the Voronoi diagram. We then take a subset $V$ of the Voronoi vertices, called the poles. The poles lie near the medial axis. Each pole has an associated ball, called polar ball. The polar balls approximate maximal balls contained in the interior or exterior of the 3D shape. The radii of the polar balls are the weights of the poles. The inverse transform is then approximate using the power diagram using the set of weighted poles.
+
+The Power Crust algorithm can be summarize in 6 steps :
+\begin{enumerate}
+\item Compute the Voronoi diagram of the sample points S.
+\item For each sample point, compute its poles.
+\item Compute the power diagram of the poles.
+\item Label each pole either inside or outside.
+\item Output the power diagram faces separating the cells of inside and outside poles as the power crust.
+\item Output the regular triangulation faces connecting inside poles as the power shape.
+\end{enumerate}
+
+The Power crust algorithm uses the notion of the \textit{Medial Axis Transform}. Let $F$ be the boundary of the 3D object. To avoid infinity edges and/or points, we assume that $F$ is contained in a bounded open region $Q$ -- for example a 3D box containing $F$. $F$ divides $Q$ into interior and exterior solids. Let $B_{c,r}$ be a ball of center $c$ and radius $r$. $B$ is empty if the interior of $B$ contains no point of $F$. A medial ball is a maximal empty ball, meaning that no other empty ball can completely contain it. The center of this medial ball is either a center of curvature of $F$ or a point with more than one closest point on $F$.
+
+The \textit{Medial Axis Transform} of $F$ is the set of medial balls of F. The centers of the medial balls form the medial axis of $F$. The medial axis includes a part inside of $F$ and a part outside of $F$. The medial axis of a three-dimensional object is generally a two-dimensional surface.
+
+Assuming a dense sampling, the Voronoi cell of every point of the data set is long, skinny and \textit{perpendicular} to the surface. It happens because in directions tangent to the surface the Voronoi cell is limited by the very close neighbors. So the Voronoi cell extends perpendicularly away from the surface and cannot extend farther than the medial axis. There it is not the closest point anymore -- due to the nature of the medial axis. Thus, the Voronoi vertices at the two ends of the long, skinny Voronoi cell should lie near the median axis. This motivates the selection of poles as an approximation of the median axis.
+
+The inverse transform uses a \textit{power diagram}. A finite set of balls can be related to power diagrams, which are a kind of Voronoi diagrams, using the distance function :
+$$d_{pow}(x, B_{c,r}) = d^2(c,x) - r^2$$
+with $d$ the usual distance function in an euclidean space  $B_{c,r}$ the ball of center $c$ and radius $r$. Note that if $x$ is inside $B_{c,r}$, $d_{pow}$ is negative. We use $d_{pow}$ to define a Voronoi diagram, called the \textit{power diagram}.
+
+Considering the power diagram of the polar balls, the \textit{power crust} is the boundary between the power diagrams cells belonging to inner poles and power diagramms cells belonging to outer poles. A facet of the power crust separates cells corresponding to an inner and an outer pole. With a dense sampling, the two polar balls should intersect only slightly, since the inner ball is mostly inside the object and the outer ball outside. The power crust actually interpolates the points of the original point cloud.
+
+
+
+Since most points of the interior solid bounded by F are inside the
+union of the inner polar balls, and outside of the union of outer po-
+lar balls, they belong to cells o f the power diagram corresponding
+to inner poles. Similarly most points in the exterior solid belong to
+cells corresponding to outer poles.
+
+3.4    Power shape
+The definition of the power crust implies a way to connect the poles
+to form a topologically correct [3] approximation o f the medial axis
+as a simplicial complex M, which we call the power shape. The ver-
+tices of M are the poles themselves. Inner poles whose cells are ad-
+jacent in the power diagram are connected by simplices in M, as are
+adjacent outer poles. The power shape is a subset of the weighted
+Delaunay triangulation ( also known as the regular triangulation)
+dual to the power diagram, just as the Delaunay triangulation is dual
+to the usual unweighted Voronoi diagram. While the medial axis of
+F is a two-dimensional surface, the power shape generally contains
+ some very fiat, but solid, tetrahedra.
+
+Steps 1 and 3 of the Power crust algorithm are dependent on Voronoi diagram algorithms and won't be detailed here.
+
+
 \subsection{Cocone algorithm}
+
 \newpage
 
 \section{Region-growing algorithms}
@@ -59,7 +102,7 @@ A classic region-growing algorithm begins by initiating a triangle as an initial
 We describe two different region-growing algorithms : the Ball Point algorithm and the Fast Reconstruction algorithm of the Point Cloud Library.
 
 \subsection{Ball Point algorithm}
-The idea of the BPA is very simple : three points form a triangle if a ball of radius \rho touches them without containing any other points. Starting with a seed triangle, the sphere pivots around an edge of the triangle until it touches another point. It then formed a new triangle. We loop this process until all reachable edges have been considered.
+The idea of the BPA is very simple : three points form a triangle if a ball of radius $\rho$ touches them without containing any other points. Starting with a seed triangle, the sphere pivots around an edge of the triangle until it touches another point. It then formed a new triangle. We loop this process until all reachable edges have been considered.
 
 
 \subsection{Fast Reconstruction algorithm (PCL)}
