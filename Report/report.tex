@@ -167,6 +167,21 @@ The coincident edges are removed by the \textit{glue} operation. Coincident egde
 
 
 \subsection{Fast Reconstruction algorithm (PCL)}
+The Point Cloud Library is an open-source library for processing point clouds. It provides a greedy algorithm for reconstructing a surface from an unorganized point cloud as fast as possible. The idea is simple: for each point $s$, project its neighbourhood on the average plane, add edges according to visibility and go back to the 3D space. The algorithm is largely inspired by %tofill
+
+This algorithm requires 2 parameters : $\mu > 1$ and $\alpha$. $\mu$ quantifies the idea of locally uniform sampling. $\alpha$ gives an upper bound on the angle between consecutive neighbors of a point on a boundary surface. $\alpha$ is a large angle, set at 120 degrees. The data points are categorized as \textit{free}, \textit{fringe}, \textit{boundary} or\textit{completed}. textit\{Free} points have no incident triangles. Points on the current boundary are labeled as \textit{fringe} or \textit{boundary}: a \textit{fringe} point has already been processed but have some missing triangles around it due to $\alpha$; a \textit{boundary} point has not yet been processed. The algorithm keep two properties true during its execution :
+\begin{itemize}
+\item No \textit{free}, \textit{fringe} or \textit{boundary} point can be in the interior of a triangle.
+\item At the end of each iteration, the point processed is either labeled \textit{completed} or \textit{boundary}.
+\end{itemize}
+
+The neighbourhood of $s$ is defined by all the points that are in the sphere centered at $s$ and of radius $\mu m$ where $m$ is the distance between $s$ and its closest neighbour. This sphere is called sphere of influence around $s$. Note that a point $p$ can be in the sphere of influence of $s$ and $s$ doesn't lie in the sphere of influence of $p$. However this asymmetry doesn't have an impact on the toplogy of the reconstructed mesh. Different techniques can be used to find the points in the sphere of influence. We can use an octree structure, a voxel grid or a kd-tree.
+
+The triangulation around $s$ is made on the projection plane $P_s$. The choice of $P_r$ is crucial for the robustness of the algorithm. The best plane would be the tangent plane of the actual surface, but it is very expensive to compute -- since we are looking for the surface. A fast approach can be averaging the normals of the existing triangles incident to $s$. Another solution is to compute the least square plane with the covariance matrix of the points in the sphere.
+
+
+
+
 \newpage
 
 \section{Implicit surface algorithms}
