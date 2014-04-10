@@ -102,7 +102,7 @@ Let $M$ be the surface of the 3D object and $S$ be the sampling points of $M$. F
 
 % HERE SAMPLING ASSUMPTIONS
 
-The BPA works by finding a seed triangle and use an advancing front to track which points have been visited and which are in the current boundary. The front $F$ is a collection of linked lists of edges. It is initialized by a single loop containing the three edges defined by the seed triangle. Each edge is represented by its two end points, the opposite vertex and the center of the ball that touches all three points. We classify the edge as \textit{active}, \textit{boundary} or \textit{frozen}. An \textit{active} edge will be used for pivoting. If the pivoting is impossible, then we classify it as \textit{boundary}. The \textit{frozen} state is explained a few paragraphs later, as it is useful in the context of out-of-core extensions. This information about the states of the edges allows a simpler and clearer algorithm for the pivoting of the ball. We do not use a single linked list because when the ball pivots around an edge, it can reach a new data point or a previously seen data point. Depending on this, the front changes topology. Algorithm~\ref{alg:bpa} shows the pseudocode for the Ball Pivoting Algorithm.
+The BPA works by finding a seed triangle and use an advancing front to track which points have been visited and which are in the current boundary. The front $F$ is a collection of linked lists of edges. It is initialized by a single loop containing the three edges defined by the seed triangle. Each edge is represented by its two end points, the opposite vertex and the center of the ball that touches all three points. We classify the edge as \textit{active} or \textit{boundary}. An \textit{active} edge will be used for pivoting. If the pivoting is impossible, then we classify it as \textit{boundary}. This information about the states of the edges allows a simpler and clearer algorithm for the pivoting of the ball. We do not use a single linked list because when the ball pivots around an edge, it can reach a new data point or a previously seen data point. Depending on this, the front changes topology. Algorithm~\ref{alg:bpa} shows the pseudocode for the Ball Pivoting Algorithm.
 
 \begin{algorithm}
 \caption{Ball Pivoting Algorithm}
@@ -138,7 +138,33 @@ The BPA works by finding a seed triangle and use an advancing front to track whi
 
 Two functions -- $ball\_pivot$ and $find\_seed\_triangle$ -- need an efficient way to retrieve the neighbourhood of a point. A simple solution is using a grid of small cubes, called voxels. The voxel's side is $\delta = 2\rho$. We store the data points in a list for each voxels. Given a point $s$, we can find the voxel $v$ it lies in by divided its coordinates by $\delta$. In order to look at every point that lies at a distance $\rho$ of $s$, we need to look at all the neighbours of $v$. Hence a total of 27 voxels to consider.
 
-The selection of a seed
+The selection of a seed is necessary for the initialisation of the pivoting. A seed triangle is a triangle such that a $\rho$ ball with its center in the outward space touches the three points of the seed triangle and contains no other data points. A way to find a seed triangle is :
+\begin{itemize}
+\item Pick any point $s$ not yet used by the triangulation;
+\item Consider all pairs of point $s_1$, $s_2$ in the 27 voxels around $s$;
+\item Build triangle $s_1$,$s_2$,$s$;
+\item Orient the triangle normal thanks to the point normals;
+\item Test that a $\rho$ ball with its center in the outward space touches the three points of the seed triangle and contains no other data points;
+\item Stop when a valid seed triangle has been found.
+\end{itemize}
+
+The second step can be refined by selecting $s_1$ and $s_2$ such that they are at a distance less than $\rho$ from $s$. We can limit ourselves to one point per voxel as candidate vertex for the seed triangle. Also, for a given voxel we can average the normal of all the points, which approximates the surface in that region. Then we consider first points $s$ such that the projection of their normals on the average normal is largely positive.
+
+The pivoting operation starts with a triangle $t =(s_i, s_j, s_0)$ and a $\rho$ ball that touches its three vertices. Let $e_{i,j}$ be the pivoting edge. The ball initially contains no other points than the points of $t$. Let $c_{i,j,0}$ be the center of the initial ball. When we are pivoting the ball around $e_{i,j}$, the center $c_{i,j,0}$ describes a circle which lies in the plan perpendicular to $e_{i,j}$ and passing by the midpoint $m = 1/2 * (s_i + s_j)$. The center of the circular trajectory is $m$ and the radius is $\| c_{i,j,0} - m \|$. If during the pivoting we hit a new point $s_k$, the triangle $(s_i, s_k, s_j)$ is a new valid triangle and the ball contains no other points, so it is valid for the next pivoting step. If we don't hit a new point, then $e_{i,j}$ is marked as boundary.
+In pratice, we consider all points in the 27 voxels around $m$. For each point $s_x$, we compute -- if possible -- the center $c_x$ of the $\rho$ ball that touches $s_x$, $s_i$ and $s_j$. $c_x$ lies on the circular trajectory describes previously. Among all the $c_x$ points, we select the one that comes first along this trajectory -- via a simple angle computation. We now have the new triangle and the new center of the ball.
+
+Once the new triangle is find, we have to update the front information. The \textit{join} operation is used when the ball pivot around $e_{i,j}$ and touches a \textit{not\_used} vertex $s_k$. In that case, we output the triangle and locally modify the front by removing $e_{i,j}$ and adding $e_{i,k}$ and $e_{k,j}$. If $s_k$ is already part of the mesh, two possibilities arise:
+\begin{enumerate}
+\item $s_k$ doesn't belong to the front. We don't generate the triangle since it would produce a non manifold mesh. Here $e_{i,j}$ is marked as boundary edge.
+\item $s_k$ belongs to the front. We check edge orientation to orient correctly the ouput triangle, then we apply the \textit{join} operation. This operation can create one or two pairs of coincident edges.
+\end{enumerate}
+
+The coincident edges are removed by the \textit{glue} operation. Coincident egdes always have opposite orientation. For example, when edge $e_{i,k}$ is added by \textit{join}, if $e_{k,i}$ is on the front, \textit{glue} will remove the two edges. Two cases arise:
+\begin{enumerate}
+\item $e_{i,k}$ and $e_{k,i}$ are in the same linked list. We just have to removed them, since they are consecutive in the linked list.
+\item $e_{i,k}$ and $e_{k,i}$ are in different linked lists, respectively $l_1$ and $l_2$. We remove $e_{i,k}$ from $l_1$ and called $l_{1,start}$ the first part of $l_1$ and $l_{1,end}$ the last part of $l_1$. We do the same thing with $l_2$. Then $l_1 = l_{1,start}+l_{2,end}$ and $l_2 = l_{2,start}+l_{1,end}$.
+\end{enumerate}
+
 
 \subsection{Fast Reconstruction algorithm (PCL)}
 \newpage
