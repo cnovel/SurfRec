@@ -6,6 +6,7 @@
 \usepackage{graphicx}
 \usepackage{algpseudocode}
 \usepackage{algorithm}
+\usepackage{amsthm}
 
 \title{Surface reconstruction\\
 \large{CO512 ISO Report}}
@@ -169,18 +170,25 @@ The coincident edges are removed by the \textit{glue} operation. Coincident egde
 \subsection{Fast Reconstruction algorithm (PCL)}
 The Point Cloud Library is an open-source library for processing point clouds. It provides a greedy algorithm for reconstructing a surface from an unorganized point cloud as fast as possible. The idea is simple: for each point $s$, project its neighbourhood on the average plane, add edges according to visibility and go back to the 3D space. The algorithm is largely inspired by %tofill
 
-This algorithm requires 2 parameters : $\mu > 1$ and $\alpha$. $\mu$ quantifies the idea of locally uniform sampling. $\alpha$ gives an upper bound on the angle between consecutive neighbors of a point on a boundary surface. $\alpha$ is a large angle, set at 120 degrees. The data points are categorized as \textit{free}, \textit{fringe}, \textit{boundary} or\textit{completed}. textit\{Free} points have no incident triangles. Points on the current boundary are labeled as \textit{fringe} or \textit{boundary}: a \textit{fringe} point has already been processed but have some missing triangles around it due to $\alpha$; a \textit{boundary} point has not yet been processed. The algorithm keep two properties true during its execution :
+This algorithm requires 2 parameters : $\mu > 1$ and $\alpha$. $\mu$ quantifies the idea of locally uniform sampling. $\alpha$ gives an upper bound on the angle between consecutive neighbors of a point on a boundary surface. $\alpha$ is a large angle, set at 120 degrees. The data points are categorized as \textit{free}, \textit{fringe}, \textit{boundary} or\textit{completed}. \textit{Free} points have no incident triangles. Points on the current boundary are labeled as \textit{fringe} or \textit{boundary}: a \textit{fringe} point has already been processed but have some missing triangles around it due to $\alpha$; a \textit{boundary} point has not yet been processed. The algorithm keep two properties true during its execution :
 \begin{itemize}
 \item No \textit{free}, \textit{fringe} or \textit{boundary} point can be in the interior of a triangle.
 \item At the end of each iteration, the point processed is either labeled \textit{completed} or \textit{boundary}.
 \end{itemize}
 
-The neighbourhood of $s$ is defined by all the points that are in the sphere centered at $s$ and of radius $\mu m$ where $m$ is the distance between $s$ and its closest neighbour. This sphere is called sphere of influence around $s$. Note that a point $p$ can be in the sphere of influence of $s$ and $s$ doesn't lie in the sphere of influence of $p$. However this asymmetry doesn't have an impact on the toplogy of the reconstructed mesh. Different techniques can be used to find the points in the sphere of influence. We can use an octree structure, a voxel grid or a kd-tree.
+The neighbourhood of $s$ is defined by all the points that are in the sphere centered at $s$ and of radius $\mu m$ where $m$ is the distance between $s$ and its closest neighbour. This sphere is called sphere of influence around $s$. The selected points are called the candidate points and the set is noted $C_s$. Note that a point $p$ can be in the sphere of influence of $s$ and $s$ doesn't lie in the sphere of influence of $p$. However this asymmetry doesn't have an impact on the toplogy of the reconstructed mesh. Different techniques can be used to find the points in the sphere of influence. We can use an octree structure, a voxel grid or a kd-tree.
 
-The triangulation around $s$ is made on the projection plane $P_s$. The choice of $P_r$ is crucial for the robustness of the algorithm. The best plane would be the tangent plane of the actual surface, but it is very expensive to compute -- since we are looking for the surface. A fast approach can be averaging the normals of the existing triangles incident to $s$. Another solution is to compute the least square plane with the covariance matrix of the points in the sphere.
+The triangulation around $s$ is made on the projection plane $P_s$. The choice of $P_r$ is crucial for the robustness of the algorithm. The best plane would be the tangent plane of the actual surface, but it is very expensive to compute -- since we are looking for the surface. A fast approach can be averaging the normals of the existing triangles incident to $s$. Another solution is to compute the least square plane with the covariance matrix of the points in the sphere. Once the plane is found, we project the points in $C_s$ on the plane and called the resulting set of points $C^p_s$.
 
+The next step is to order the points in $C^p_s$ around $s$. We define the coordinate system of $P_s$ with $s$ as the origin. Each point is characterized by the angle $\theta$ between the $x$ axis and the vector from $s$ to the point. Then $C^p_s$ is partitioned by the quadrants in which they lie. In each quadrant, we sort the points based on $sin^2(x)$. These ordered sets are merged and thus we have the angle ordering around $s$.
 
+Among the points in $C^p_s$, some points are not visible from $s$. We have to remove them from the set before performing the triangulation step. We define a \textit{boundary edge} as any edge with only one triangle incident on it. The point of a \textit{boundary edge} therefore have to be labeled as \textit{fringe} or \textit{boundary}. \textit{Internal edges} are edges connecting a \textit{completed} point to any other points. The \textit{boundary} edges are also projected on $P_s$. If the line of sight from $s$ to a point in $C^p_s$ is obstructed by an edge, then the point is occluded and removed from $C^p_r$. All the points between consecutive \textit{boundary edges} of $s$ are removed as the can't be seen from $s$. Then we can remove \textit{fringe} or \textit{boundary} that have $s$ in their invisible region. Once this is done, we test the remaining points for occlusion. The naive approach of considering all the edges for occlusion is very expensive. The following theorem limits the search to few edges:
+\newtheorem{mydef}{Theorem}
+\begin{mydef}
+Only the \emph{boundary edges} of the points in $C_s$ can be possible occluding edges between $s$ and $C^p_s$.
+\end{mydef}
 
+The remaining points are ordered and stored in $C^f_s$. Then we perform the triangulation step. The points in $C^f_s$ are connected to $s$. If the angle between two consecutive points is less than $\alpha$, the two points are connected with a \emph{boundary edge}. If an edge already exists, then we label it as an \emph{internal edge}. If the angle is greater than $\alpha$, then the two points are not connected to each others. We label the edges starting from $s$ accordingly to the triangles formed. If $s$ is surrounded by triangles, $s$ is labeled as \emph{completed}. Else $s$ is labeled as \emph{boundary}. All the \emph{free} points in $C^f_s$ are labeled as \emph{fringe} points and are append to the queue of points to process.
 
 \newpage
 
