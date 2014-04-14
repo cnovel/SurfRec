@@ -7,6 +7,7 @@
 \usepackage{algpseudocode}
 \usepackage{algorithm}
 \usepackage{amsthm}
+\usepackage{amssymb}
 
 \title{Surface reconstruction\\
 \large{CO512 ISO Report}}
@@ -222,7 +223,43 @@ $$\nabla(\chi_M * \tilde{F})(q) \approx \sum_{s \in S} \\|P_s\\| \tilde{F}_{s.p}
 
 The choice of the smoothing filter is in pratice important. On the one hand, it should be sufficiently narrow so that the data is not oversmooth. And on the other hand it should be wide enough so that the integral over $P_s$ is well approximated by the value at $s.p$ times the patch area. A good choice of filter that balances these two requirements is a Gaussian filter whose variance is on the order of the sampling resolution.
 
+For the implementation, we must discretize the problem. The idea here is to use a set of function to represent $\chi$ as a combination of those functions. A straightforward approach is to discretize the space with a regular 3D grid. But this uniform structure becomes impractical for fine detail reconstruction. Moreover, some areas are finely details whereas there is no points in them.
 
+We only need an accurate representation of the implicit function near the surface. This motivates the use of an adaptative octree to represent the implicit function and to solve the Poisson system. An octree is a tree data structure in which each node has exactly eight children. In 3D space, each node is a cube, and its children are smaller cubes, dividing the node into 8 equal cubes. We use the positions of the sample points to define the octree $O$ and associate a function $F_n$ to every node $n \in O$. The following conditions have to be satisfied:
+\begin{enumerate}
+\item $\vec{V}$ can be precisely and efficiently represented as the linear sum of the $F_n$.
+\item The matrix representation of the Poisson equation, expressed in terms of the $F_n$ can be solved efficiently.
+\item A representation of the indicator function as the sum of the $F_n$ can be precisely and efficiently evaluated near the surface model.
+\end{enumerate}
+
+Given $S$ and a maximum tree depth $D$, We define the octree $O$ to be the minimal octree such that every point sample fall into a leaf node at depth $D$. We then define a set of functions obtain as the span of a fixed, unit-integral base function $F: \mathbb{R}^3 \to \mathbb{R}$. For every node $n$, we define $F_n$:
+$$F_n(q) = F(\frac{q - n.c}{n.w})\frac{1}{o.w^3}$$
+where $n.c$ is the center of the node and $n.w$ is the width of the node.
+
+The space of functions $\{F_n\}$ has a multiresolution structure: deeper nodes are associated with higher frequency functions. Due to the octree representation, the function representation becomes more precise as we are closer to the surface.
+
+%% SELECTION OF THE BASE FUNCTION %%
+
+To obtain a better precision, we use trilinear interpolation to distribute the sample accross the eight nearest node. We define the approximate gradient field of the indicator function as:
+$$\vec{V}(q) \equiv \sum_{s \in S} \sum_{n \in Ngbr_D(s)} \alpha_{n,s}F_n(q)s.\vec{N}$$
+where $Ngbr_D(s)$ are the 8 depth-D nodes closest to $s.p$ and $\alpha_{n,s}$ is the trilinear interpolation weight define by $\alpha_{n,s} = (1 - \mid{}x_{n.c} - x_s \mid)(1 - \mid y_{n.c} - y_s\mid)(1 - \mid z_{n.c} - z_s\mid)$.
+
+Considering a uniform sampling of the surface, we can assume that $\\|P_s\mid$ is constant and thus that $\vec{V}$ is a good approximation of the gradient of $\chi$, up to a multiplicative constant.
+
+Now that $\vec{V}$ is computed, we want to find a solution $\tilde{\chi} \in \{F_n\}$ such that $\tilde{\chi}$ is a solution to the Poisson equation $\Delta\tilde{\chi} = div{\vec{V}}$. But while $\tilde{\chi}$ and $\vec{V}$ are in $\{F_n\}$, this is not necessarily true for $\Delta\tilde{\chi}$ and $div{\vec{V}}$. So we project $\Delta\tilde{\chi}$ and $div{\vec{V}}$ onto the space $\{F_n\}$ and we choose $\chi$ so that the projection of $\Delta\tilde{\chi}$ is the closest to the projection of $div{\vec{V}}$. In general the functions $F_n$ don't form an orthonormal basis. So solving this problem directly is very computationally expensive. We simplify the problem by solving for the function $\tilde{\chi}$ minimizing:
+$$\sum_{n \in O}\|\langle\Delta\tilde{\chi}-div(\vec{V}),F_n\rangle\|^2 = \sum_{n \in O}\|\langle\Delta\tilde{\chi},F_n\rangle - \langle div(\vec{V}), F_n\rangle\|^2$$
+So having the $\mid O \mid$-dimensional vector $\nu$ whose $n$-th coordinate is $\nu_n = \langle div(\vec{V}), F_n\rangle$, the goal is to find the coordinates of the projection of the laplacian of $\chi$ so that we found the closest projection as possible. Let $\tilde{\chi} = \sum_n x_n F_n$. We define the $\mid O \mid$ matrix $L$ such that $Lx$ returns the dot product of the Laplacian with each of the $F_n$. $L$ is defined like this:
+$$L_{n,n'} = \langle\frac{\partial^2F_n}{\partial x^2}, F_n\rangle + \langle\frac{\partial^2F_n}{\partial y^2}, F_n\rangle + \langle\frac{\partial^2F_n}{\partial z^2}, F_n\rangle$$ 
+
+So we need do find $x$ solution of $\min_{x}\|Lx - \nu\|^2$.
+
+$L$ is sparce because the $F_n$ are compactly supported, and symmetric since $\int f''g = -\int f'g'$.
+
+Once we have $x$, we know the surface indicator function $\tilde{\chi}$. We now have to determine the right isosurface to extract. To select the isovalue, we evaluate $\tilde{\chi}$ at the sample positions and use the average of the values for extracting the isosurface. Thus:
+$$\partial\tilde{M} = \{q \in \mathbb{R}^3 \mid \tilde{\chi}(q) = \gamma\} \text{ with } \gamma = \frac{1}{\mid S\mid}\sum_{s \in S}\tilde{\chi}(s.p)$$
+This choice for the isovalue has the property that scaling $\tilde{\chi}$ doesn't change the isosurface. Thus, knowing $\vec{V}$ up to a multiplicative constant provides sufficient information for reconstructing the surface.
+
+We know have the isosurface of $S$. If we want a triangulation of the surface, we can use the Marching Cubes algorithm describe in section ??.
 
 \subsection{Radial Basis Function algorithm}
 
