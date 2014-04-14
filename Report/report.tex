@@ -202,6 +202,27 @@ We describe four different implicit surface algorithms : the Poisson algorithm, 
 
 
 \subsection{Poisson algorithm}
+In the Poisson algorithm, we compute an \emph{indicator function} $\chi$, defined as 1 at points inside the 3D object, 0 otherwise. We obtain the reconstructed surface by extracting the right isosurface. The main idea is that there is a relationship between the sampled oriented points and the indicator function of the model. The gradient of $\chi$ is  a vector field that is zero almost everywhere, since $\chi$ is constant almost everywhere. At points near the surface however, the gradient of $\chi$ is equal to the inward surface normals. So the oriented samples can be viewed as samples of the gradient of $\chi$.
+
+The goal is to find the function $\chi$ whose gradient best approximates the vector field $\vec{V}$ defined by the given oriented points. So we have to solve $min_\chi\|\nabla\chi - \vec{V}\|$. By applying the divergence operator, this problem becomes a Poisson problem: find $\chi$ whose Laplacian -- divergence of gradient -- equals the divergence of $\vec{V}$:
+$$\Delta\chi = div(\vec{V})$$
+
+Let $S$ be the input data, with $s \in S$ a sample consisting of $s.p$ the position and $s.\vec{N}$ the inward facing normal. We assume $s$ is lying on or near the surface $\partial M$ of an unknow model $M$.
+
+Because $\chi$ is a piecewise constant function, its explicit gradient field would result in a vector field with unbounded values at the surface boundary. To avoid this problem, $\chi$ is convolve with a smoothing filter and we consider the gradient field of the smoothing function.
+
+\newtheorem{lemma}{Lemma}
+\begin{lemma}
+Given $M$ and its boundary $\partial M$, let $\chi_M$ be the indicator function of $M$, $\vec{N}_{\partial M}(p)$ be the inward facing normal at $p \in \partial M$, $\tilde{F}(q)$ be a smoothing filter and $\tilde{F}_p(q) = \tilde{F}(q-p)$ its translation to the point $p$. The gradient of the smmoothed indicator function is equal to the vector field obtained by smoothing the surface normal field:
+$$\nabla(\chi_M * \tilde{F})(q) = \int_{\partial M} \tilde{F}_p(q) \vec{N}_{\partial M}(p) dp$$
+\end{lemma}
+
+The problem is that we don't know what the surface $\partial M$ is and thus we can't perform the integration. We approximate the gradient field with a discrete summation on the sample points. We use them to sample $\partial M$ into distinct patches $P_s \subset \partial M$ and approximate the integral:
+$$\nabla(\chi_M * \tilde{F})(q) \approx \sum_{s \in S} \\|P_s\\| \tilde{F}_{s.p}(q) s.\vec{N} \equiv \vec{V}(q)$$
+
+The choice of the smoothing filter is in pratice important. On the one hand, it should be sufficiently narrow so that the data is not oversmooth. And on the other hand it should be wide enough so that the integral over $P_s$ is well approximated by the value at $s.p$ times the patch area. A good choice of filter that balances these two requirements is a Gaussian filter whose variance is on the order of the sampling resolution.
+
+
 
 \subsection{Radial Basis Function algorithm}
 
