@@ -8,6 +8,8 @@
 \usepackage{algorithm}
 \usepackage{amsthm}
 \usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{commath}
 
 \title{Surface reconstruction\\
 \large{CO512 ISO Report}}
@@ -47,6 +49,7 @@ The advantage of Delaunay-based algorithms is that the triangulation created is 
 We describe two different Delaunay based algorithms : the Power Crust algorithm and the Cocone algorithm.
 
 \subsection{Power crust algorithm}
+\label{subsec:pca}
 The Powercrust algorithm compute an approximate medial axis of the 3D point cloud $S$ using the Voronoi diagram. We then take a subset $V$ of the Voronoi vertices, called the poles. The poles lie near the medial axis. Each pole has an associated ball, called the polar ball. The polar balls approximate maximal balls contained in the interior or exterior of the 3D shape. The radii of the polar balls are the weights of the poles. The inverse transform is then approximate using the power diagram using the set of weighted poles.
 
 The Power Crust algorithm can be summarize in 6 steps :
@@ -88,6 +91,26 @@ We know that two balls with different lables intersect shallowly. So the deeper 
 We have the two rules for updating the priority queue. We just have to loop until every pole is labeled, and then extract the power crust.
 
 \subsection{Cocone algorithm}
+Cocone algorithm is also a Delaunay-based algorithm. The idea here is to find the restricted Delaunay Triangulation according to the surface of the 3D model. Edelsbrunner and Shah showed that the underlying space of this triangulation is homeomorphic to $S$ under certain conditions. To find the restricted Delaunay Triangulation $DT_S$, we consider the restricted Voronoi diagram $V_S$ with restricted Voronoi cells $V_{s,S} = V_s\cap S$. The dual of this restricted Voronoi diagram is $DT_S$. More precisely, the edge $pq \subset DT_S$ if and only if $V_{p,S}\cap V_{q,S} \ne \emptyset$. A triangle $pqr \subset DT_S$ if and only if $V_{p,S}\cap V_{q,S}\cap V_{r,S} \ne \emptyset$.
+
+The homeomorphic condition is called \emph{closed ball properties} and states that each $V_{s,S}$ is a topological 2-ball, each non-empty intersection $V_{p,S}\cap V_{q,S}$ is a topological 1-ball and each non-empty intersection $V_{p,S}\cap V_{q,S}\cap V_{r,S}$ is a point. Under this condition, $DT_S$ is a piecewise linear manifold homeomorphic to $S$.
+
+We introduce also the \emph{local feature size}, $f(s)$, at point $s \in S$ as the least distance between $p$ and the medial axis of $S$. $f$ is 1-Lipschitz, meaning $\abs{f(p) - f(q)}\le\abs{p - q}$.
+
+The \emph{cocone} algorithm selects a set of candidates triangles $T$ satisfying three conditions:
+\begin{enumerate}
+\item $DT_S \subset T$.
+\item The circumcircle of each triangle $t \in T$ is small.
+\item The normal to each triangle $t \in T$ makes a small angle $c\epsilon$ with the surface normal at the vertex $s$, where $s$ is the vertex with the largest angle in $t$ and $c$ is a constant independant of $\epsilon$.
+\end{enumerate}
+
+Let $S$ be the actual surface of the 3D model, $D$ the data set and $s \in D$ a point of the data set. We start by comptuing the Voronoi diagram $V$ of $D$. For every point $s \in D$, we call $V_s$ the associated Voronoi cell. The normal to $S$ at a point $s$ is estimated using the farthest pole of $V_s$, as introduced in the subsection~\ref{subsec:pca}. The estimated normal is the line going through $s$ and that pole. We then find the complementary cone -- \emph{cocone} -- of $V_s$. The \emph{cocone} is defined as the complement of the double cone of apex $s$ making an angle of $\frac{\pi}{2}-\theta$ with the estimated normal at $s$. In practice, $\theta\le\frac{\pi}{8}$.
+
+We then select the edges of $V$ that intersect the cocone of their three adjacent samples. The dual triangles of these edges form the candidate set of triangles $T$. Under the assumption $\theta\le\frac{\pi}{8}$, $T$ satisfies the three conditions stated before.
+
+The next step is to remove all triangles incident to sharp edges. An edge is sharp if the angle between two consecutive triangles around this edge is superior to $\frac{3\pi}{2}$. An edge with a single incident triangle is also sharp.
+
+%% ADD HERE WATER TIGHT COCONE %%
 
 \newpage
 
@@ -259,14 +282,25 @@ Once we have $x$, we know the surface indicator function $\tilde{\chi}$. We now 
 $$\partial\tilde{M} = \{q \in \mathbb{R}^3 \mid \tilde{\chi}(q) = \gamma\} \text{ with } \gamma = \frac{1}{\mid S\mid}\sum_{s \in S}\tilde{\chi}(s.p)$$
 This choice for the isovalue has the property that scaling $\tilde{\chi}$ doesn't change the isosurface. Thus, knowing $\vec{V}$ up to a multiplicative constant provides sufficient information for reconstructing the surface.
 
-We know have the isosurface of $S$. If we want a triangulation of the surface, we can use the Marching Cubes algorithm describe in section ??.
+We know have the isosurface of $S$. If we want a triangulation of the surface, we can use the Marching Cubes algorithm describe in subsection~\ref{subsec:mca}.
 
 \subsection{Radial Basis Function algorithm}
 
 \subsection{Level Set algorithm}
 
 \subsection{Marching cubes algorithm}
+\label{subsec:mca}
+The marching cubes algorithm is used to triangulate isosurfaces. The previously described algorithms give us the isosurface of the 3D object but we can't easily represent it. The MCA creates a triangle model from the isosurface.
 
+A 3D grid is created so that it covers entirely the 3D model. The idea is to evaluate the signed distance function or the indicator function for each vertex of each cube. Depending on which vertices are inside the model and which vertices are outside the model, we trace different triangles.
+
+Since there are eight vertices in each cube and two possible states, there are $2^8 = 256$ ways the isosurface can intersect a cube. However we can reduce the number of cases due to two different symmetries. First, the topology of the triangulated surface is unchanged if we reverse the states of cube vertices. Complementary cases, where vertices greater than the isovalue are interchanger with those lesser, are equivalent. So only cases from zero to four vertices greater than the surface values have to be considered. This shrinks down the number of different cases to 128. Using rotational symmetry, we reduced the problems to 15 cases.
+
+%% ILLUSTRATION OF THE 15 CASES %%
+
+The edges start and end points all lie in the middle of the edges of the cube. This allows continuity of the triangulated surface.
+
+Once the triangulation is done, we have to compute and orient the normals for each triangle. The normal can be easily obtain from a simple cross product of two sides of the triangle. The orientation is computed thanks to the isovalue. Considering the barycenter $b$ of $v_1$, $v_2$ and $v_3$ vertices of the triangle, if $value(b + \epsilon n) > isovalue$, then the normal is pointing inward and we must flip it. Else, we do nothing.
 
 \section*{Conclusion}
 \addcontentsline{toc}{section}{Conclusion}
