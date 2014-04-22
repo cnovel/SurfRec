@@ -20,18 +20,5 @@ class Grid {
 			listOfCubes.push_back(Cube(p, res));
 		}
 	}
-
-	Point getTop() {
-		return top;
-	}
-    Point getBottom() {
-    	return bottom;
-    }
-    float getRes() {
-    	return res;
-    }
-    std::std::vector<Cube>& getCubes() {
-    	return listOfCubes*;
-    }
 	
 }
