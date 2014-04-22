@@ -8,7 +8,10 @@
 #include <math.h>
 #include <iostream>
 #include <vector>
-#include <sstream>
+
+#include "grid.h"
+#include "point.h"
+#include "cube.h"
 
 float isofunction(Point p) {
 	//* Torus equation
@@ -16,7 +19,7 @@ float isofunction(Point p) {
 	float r = 0.5;
 	float f = pow(R - sqrt(pow(p.x, 2.0) + pow(p.y, 2.0)), 2.0) + pow(p.z, 2.0) - pow(r, 2.0);
 	//*/
-	
+
 	return f;
 }
 
