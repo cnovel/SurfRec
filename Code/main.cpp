@@ -20,6 +20,11 @@ float isofunction(Point p) {
 	float f = pow(R - sqrt(pow(p.x, 2.0) + pow(p.y, 2.0)), 2.0) + pow(p.z, 2.0) - pow(r, 2.0);
 	//*/
 
+	/* Sphere equation
+	float R = 2.0;
+	float f = pow(p.x, 2.0) + pow(p.y, 2.0) + pow(p.z, 2.0) - pow(R, 2.0);
+	//*/
+
 	return f;
 }
 
