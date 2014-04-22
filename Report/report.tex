@@ -10,6 +10,7 @@
 \usepackage{amssymb}
 \usepackage{mathtools}
 \usepackage{commath}
+\usepackage{stmaryrd}
 
 \title{Surface reconstruction\\
 \large{CO512 ISO Report}}
@@ -218,7 +219,7 @@ The remaining points are ordered and stored in $C^f_s$. Then we perform the tria
 
 \section{Implicit surface algorithms}
 \subsection{General idea}
-In an implicit surface algorithm, a signed distance function is defined from the sample points and computed. Then given the zero-set of the signed distance function, an approximate triangulated surface is constructed.
+In an implicit surface algorithm, an indicator function $f$ is computed from the sample points. $f:\mathbb{R}^3 \to \mathbb{R}$ can be positive inside the 3D model and negative outside the 3D model. Or $f$ can be equal to $0$ outside the model and equal to $1$ inside the model. Given $f$, we extract the right isosurface that fits the actual surface of the 3D model.
 
 There is a major difference between Implicit surface algorithms and Region-growing or Delaunay-based algorithms. Region-growing and Delaunay based methods interpolate sample points, mean that the reconstructed surface lies on the sample points. The implicit surface approach approximates sample points and can lack accuracy. But one advantage is that implicit surface methods are ideal in the case of highly noised data.
 
@@ -285,8 +286,72 @@ This choice for the isovalue has the property that scaling $\tilde{\chi}$ doesn'
 We know have the isosurface of $S$. If we want a triangulation of the surface, we can use the Marching Cubes algorithm describe in subsection~\ref{subsec:mca}.
 
 \subsection{Radial Basis Function algorithm}
+The RBF algorithm defines an indicator function $f$, such that if $x$ is inside the 3D model, $f(\boldsymbol{x}) < 0$ and if $x$ is outside the 3D model, $f(\boldsymbol{x}) > 0$. Thus, the surface of the 3D model is the isosurface $S = \{\boldsymbol{x}: f(\boldsymbol{x}) =0\}$.
+
+The first step is to construct a signed-distance function. We want to find a function $f$ which implicitly defines a surface $S$ and so satisfies the equation $f(\boldsymbol{x}_i) = 0 \forall i \in \{1..n\}$, where $x_i$ is a point lying on the surface. However, we want to avoid the trivial solution $f = 0$. We then add off-surface points to the input data and these point are given non-zero values. We must find $f$ such that:
+$$f(\boldsymbol{x}_i) = 0 \hspace{1em}\forall i \in \llbracket 1,n\rrbracket$$
+$$f(\boldsymbol{x}_i) = d_i \ne 0 \hspace{1em}\forall i \in\llbracket n+1,N\rrbracket$$
+Here, $d_i$ is chosen to be the distance from $x_i$ to the closest point of $S$. Points outside the object are assigned positive values, points inside are assigned negative values. We generate these off-points by computing the normal of a sample point $p$ and place off-points along this normal. To compute the normal, we select all the points in the neighbourhood of $p$. We then find the best fitting plane, by using for example the least square method. We decide of the orientation of the normal with information such as consistency or the scanner position. It is not necessary to estimate a normal for every point. If a normal direction or sense is ambiguous, we do not need to process it.
+
+When creating the off-points, they must not intersect other parts of the surface. The off-point is constructed so that the closest surface point is the surface point that generated it. Once this constraint is satisfied, the reconstructed surface is relatively insensitive to the projection distance $d_i$.
+
+We now want to approximate the signed distance $f$ by an interpolant $s$. $\forall i$, let $f_i = f(\boldsymbol{x}_i)$. We want to find $s$ such that $\forall i\in\llbracket 1,N\rrbracket, s(\boldsymbol{x}_i) = f_i$. $s \in \text{BL}^{\text{(2)}}(\mathbb{R})$, the Beppo-Levi space with square integral second derivatives. Under this assumption, we define the following semi-norm:
+$$\|s\| = \int_{\mathbb{R}^3}\left(\frac{\partial^2s(\boldsymbol{x})}{\partial x^2}\right)^2 + \left(\frac{\partial^2s(\boldsymbol{x})}{\partial y^2}\right)^2 + \left(\frac{\partial^2s(\boldsymbol{x})}{\partial z^2}\right)^2 + \left(\frac{\partial^2s(\boldsymbol{x})}{\partial x\partial y}\right)^2 + \left(\frac{\partial^2s(\boldsymbol{x})}{\partial x\partial z}\right)^2 + \left(\frac{\partial^2s(\boldsymbol{x})}{\partial y\partial z}\right)^2 d\boldsymbol{x}$$
+
+This semi-norm is the measure of the smoothness of the function $s$: the lower the semi-norm, the smoother the function. The function $s^* = \text{arg min} \|s\|$ is the smoothest interpolant and has the simple form $s^*(x) = p(x) + \sum_{i = 1}^{N}\lambda_i\abs{x - x_i}$. $p$ is a linear polynomial, $\lambda_i \in \mathbb{R}$ and $\abs{.}$ is the Euclidean norm on $\mathbb{R}^3$.
+
+$s^*$ is a particular example of \emph{Radial basis functions}. RBFs are functions of the form:
+$$s(\boldsymbol{x}) = p(x) + \sum_{i=1}^{N}\lambda_i\Phi(\abs{\boldsymbol{x} - \boldsymbol{x}_i})$$
+where $p$ is a polynmial of low degree and $\Phi:[0,\infty) \to \mathbb{R}$ is called the basic function of $s$. $\Phi$ is usually unbounded and of non-compact support. The points $\boldsymbol{x}_i$ are called the centers of the RBF.
+
+Popular choices for $\Phi$ are $\Phi(r) = r^2log(r)$, $\Phi(r) = exp(-cr^2)$, $\Phi(r) = \sqrt{r^2+c^2}$, or simpler function such as $\Phi(r) = r$ or $\Phi(r) = r^3$.
+
+We use RBFs for interpolating scattered data as the associated system of liner equations is guaranteed to be invertible under limited conditions. An arbitrary choise for the coefficients $\lambda_i$ will create a function $s^* \notin \text{BL}^{\text{(2)}}$.The side conditions are:
+$$\sum_{i = 1}^{N}\lambda_i =  \sum_{i = 1}^{N}\lambda_i x_i = \sum_{i = 1}^{N}\lambda_i y_i =\sum_{i = 1}^{N}\lambda_i z_i = 0$$
+More generally, for any RBFs, if the degree of $p$ is $m$ then the side condtions become:
+$$\sum_{i = 1}^{N}\lambda_i q(x_i) = 0\text{, for all polynomials }q\text{ of degree at most }m$$
+
+These side conditions and the interpolation conditions create a linear systel to solve for the coefficients of the RBF. Let $\{p_1, ..., p_l\}$ be a basis for polynomials of degree at most $m$ and let $c = (c_1, ..., c_l)$ be the coefficient of $p$ in this basis. The side conditions and interpolatiion conditions can be written in matrix form:
+$$
+\begin{pmatrix}
+A & P \\
+P^T & 0
+\end{pmatrix}
+\begin{pmatrix}
+\lambda \\
+c
+\end{pmatrix}
+= B
+\begin{pmatrix}
+\lambda \\
+c
+\end{pmatrix}
+=
+\begin{pmatrix}
+f \\
+0
+\end{pmatrix}
+$$
+with $A_{i,j} = \Phi(\abs{x_i - x_j})\text{, }\forall i,j \in \llbracket 1, N\rrbracket$ and $P_{i,j} = p_j(x_i)\text{, }\forall i \in \llbracket 1, N\rrbracket\text{, }\forall j \in \llbracket 1, l\rrbracket$.
+
+Solving the linear system determines $\lambda$ and $c$, therefore $s(x)$. However, the matrix $B$ has no particularity except for its symmetry. $B$ has no reason to be sparse for example. This mean that substantial error will easily wrong any standard numerical solution. Also, as $N$ gets larger, $B$ gets larger and the computation of the solution can take a very long time. If $\Phi$ is chosen to be compactly supported -- Gaussian or inverse multiquadric for example, $B$ is now a sparse matrix and this can be exploited for the resolution of the linear system. However, non-compactly supported functions are better suited to extrapolation and interpolation of irregular, non-uniformly sampled data.
+
+Thus, storing $B$ requires space for $N(N+1)/2$ real numbers. Direct methods are inappropriate for problems with more than 2000 sampled points. Moreover, the evaluation of $s$ requires $N$ additions, which can be long as $N$ gets larger.
+
+Fast methods exist to overcome this problem. Fast evaluation of RBFs is performed with the Fast Multipole Method -- FMM. The FMM uses the fact that when computations are performed, infinite precision is not expected. The evaluation is performed by clustering the far points and approximating the evaluation of the RBFs for each cluster. Direct evaluation is performed for closer points. Once the right balance between the number of clusters and the \emph{farness} of each point is found, FMM computes a good approximation of an RBF with a significant decrease in computation time.
+
+Another method is the center reduction. In the regular method, all the input points are use as interpolation points and as centers of the RBF. However, the input data could be approximated with fewer centers for roughly the same accuracy. A greedy algorithm selects the centers of the RBF iteratively to achieve the desired fitting accuracy:
+\begin{enumerate}
+\item Choose a subset from the interpolation points $x_i$ and fit an RBF to these points only.
+\item Evaluate the reconstruction error $\epsilon_i = f_i - s(x_i)$ at all nodes.
+\item If $\text{max}\{\abs{\epsilon_i}\} < \text{fitting accuracy}$, stop.
+\item Else append nex centers where $\epsilon_i$ is large.
+\item Re-fit the RBF and go to 2.
+\end{enumerate}
+This simple greedy algorithm can reduced by a factor 5 the number of centers of the RBF. This lead to a fastest fitting and evaluation of the RBF.
 
 \subsection{Level Set algorithm}
+
 
 \subsection{Marching cubes algorithm}
 \label{subsec:mca}
