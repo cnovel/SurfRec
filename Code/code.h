@@ -3,6 +3,7 @@
 
 #include "point.h"
 
+std::vector< std::vector <Point> > triangles(int code, float res, std::vector<int> rotations, Cube c)
 bool acceptable(int code)
 std::vector< std::vector<int> > createRotationTable();
 int computeCode(std::vector<int> v);
