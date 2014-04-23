@@ -16,9 +16,6 @@
 */
 class Cube {
     public:
-    	std::vector<Point>& getPoints();
-
-    private:
     	std::vector<Point> listOfPoints;
 };
 
