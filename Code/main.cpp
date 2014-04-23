@@ -39,7 +39,7 @@ std::vector< std::vector <Point> > cubeProcessing(Cube c, std::vector< std::vect
 	for (int i = 0; i < rotations.size(); i++) {
 		code = computeRotatedCode(markedVertices, rotations[i]);
 		if acceptable(code) {
-			return triangles(code, res, rotations, c)
+			return triangles(code, res, rotations[i], c)
 		}
 	}
 }

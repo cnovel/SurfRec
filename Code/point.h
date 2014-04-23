@@ -1,6 +1,8 @@
 #ifndef DEF_POINT
 #define DEF_POINT
 
+Point meanPoint(Point p1, Point p2);
+
 class Point {
     public:
     	Point();
