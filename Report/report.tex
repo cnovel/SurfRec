@@ -351,7 +351,50 @@ Another method is the center reduction. In the regular method, all the input poi
 This simple greedy algorithm can reduced by a factor 5 the number of centers of the RBF. This lead to a fastest fitting and evaluation of the RBF.
 
 \subsection{Level Set algorithm}
+The Level Set Methods is a well-known technique for tracking shapes in 2D for examples. The Level Set method can be use for reconstructing the surface of a 3D object.
 
+Let $S$ be the data set. $S$ can here be composed of points, curves, surface patches. $d(x) = dist(x,S)$ is the distance function to $S$. We then define surface energy as:
+$$E(\Gamma) = \left[\int_{\Gamma} d^p(x)ds\right]^{1/p}$$
+with $1 \le p \le \infty$. When $p = \infty$, $E(\Gamma)$ is equal to the distance of between $S$ and the furthest point of $S$ on $\Gamma$. By taking a minimizer of the energy function, we mimic an elastic membrane attached to the data set. This membrane is the surface we are looking for.
+$$\frac{\delta E(\Gamma)}{\delta\Gamma} = \frac{1}{p}\left[\int_{\Gamma} d^p(x)ds\right]^{1/p - 1}[pd^{p-1}\nabla d \cdot n +d^p\kappa]$$
+with $n$ the unit normal and $\kappa$ the mean curvature of $\Gamma$. A local minimum is found when the equation is equal to 0, hence when:
+$$d^{p-1}(x)[\nabla d(x) \cdot n + \frac{1}{p}d(x)\kappa] = 0\text{, }\forall x\in\Gamma$$
+There is a balance between the attraction force $\nabla d(x) \cdot n$ and the surface tension $\frac{1}{p}d(x)\kappa$. The $d(x)$ term in the surface tension part provides an adaptation to the sampling resolution. Areas where the sampling is high have a lower $d(x)$ and so the reconstructed surface will be more rigid; whereas areas with a poor sampling have a higher $d(x)$ and so the reconstructed surface will be more flexible. The parameter $p$ affects the flexibility of the membrane. In practice, $p = 1$ or $p = 2$ lead to good results.
+
+We can also derived the gradient flow of the energy functional:
+$$\frac{d\Gamma}{dt} = -\left[\int_{\Gamma} d^p(x)ds\right]^{1/p - 1}d^{p-1}[\nabla d(x) \cdot n +\frac{1}{p}d(x)\kappa]$$
+which gives us the same steady state solution, also called Euler-Lagrange equation.
+
+In general, we don't know the exact topology of the surface to be reconstructed. Topological changes may occur during the deformation process -- creation of holes for example. Thus explicit tracking is almost impossible to implement. Using the level set method is here a powerful tool, since it is an implicit method. This method is based on continuous formulation using Partial Differential Equations (PDEs) and allows us to deform an implicit surface, which usually is an isocountour of a scalar function -- the level set.
+
+Considering the surface $\Gamma(t)$ we are trying to fit to the data set $S$, we define $\Omega(t)$ the region enclosed by $\Gamma(t)$ and $\phi(x,t)$ the level-set function associated to $\Omega(t)$.
+$$\phi(x,t) > 0\text{ if } x\in\Omega(t)$$
+$$\phi(x,t) = 0\text{ if } x\in\Gamma(t)$$
+$$\phi(x,t) < 0\text{ if } x\in\Omega^c(t)$$
+$\Gamma(t)$ is the zero level set of $\phi(x,t)$. Differentiating the equation $\phi(\Gamma(t),t) = 0$ with respect to $t$ leads to the equation:
+$$\phi_t + \frac{d\Gamma(t)}{dt}\cdot\nabla\phi = 0$$
+where we replace $\frac{d\Gamma(t)}{dt}$ with the velocity of $x$ on $\Gamma$. Since here the velocity depends only on the geometryx of the moving surface, we define $v$ by applying the same motion law for all level sets of the level set function, resulting in a morphological PDE. Using the gradient flow of the energy functional and $p = 1$, the gradient in level set formulation becomes:
+$$\frac{\partial\phi}{\partial t} = \abs{\nabla\phi}\left[\nabla d \cdot \frac{\nabla\phi}{\abs{\nabla\phi}} + d\nabla\cdot\frac{\nabla\phi}{\abs{\nabla\phi}}\right]$$
+
+$\frac{\nabla\phi}{\abs{\nabla\phi}}$ represents the unit normal and $\nabla\cdot\frac{\nabla\phi}{\abs{\nabla\phi}}$ represents the mean curvature of the surface.
+
+Now that we have the governing equation for our level-set method, we will discuss the numerical implementation. We define a 3D grid of resolution $h$. In order to achieve a good reconstruction, $h$ is set to be higher than the sampling resolution of the data set.
+
+The first step is to compute the distance function $d$. $d$ satisfies two conditions -- called the eikonal equation:
+$$\abs{\nabla d(x)} = 1\text{, }d(x\in S) = 0$$
+Given $M$ datapoints, we first locate each data point within a grid cell and find the exact distance to the data point at the vertices of the grid cell. We use these values as initial data and solve the eikonal equation at all other grid points to find $d(x)$. We can solve the eikonal equation with a simple algorithm. Let $d_{i,j,k}$ be the value of $d(x_{i,j,k})$ where $x_{i,j,k}$ is a vertex of the grid.
+$$[(d_{i,j,k} - x_{min})^+]^2 + [(d_{i,j,k} - y_{min})^+]^2 + [(d_{i,j,k} - z_{min})^+]^2 = h^2$$
+where $(x)^+ = x$ if $x > 0$, $0$ otherwise and $x_{min} = min(d_{i-1,j,k}, d_{i+1,j,k})$, $y_{min} = min(d_{i,j-1,k}, d_{i,j+1,k})$, $z_{min} = min(d_{i,j,k-1}, d_{i,j,k+1})$.
+
+We use 9 sweeps of this iterative procedure, by alternating the ordering of the grid points along $x$,$y$ and $z$. This mean the first sweep is $i=1:n$, $j=1:n$ and $k=1:n$ then $i=1:n$, $j=1:n$ and $k=n:1$ then $i=1:n$, $j=n:1$ and $k=1:n$ and so on. There are 8 possible sweeps and we add one more sweep for assuring convergence.
+
+The next step is to find a good initial guess for $\Gamma$. We can initiate $\Gamma$ as a simple surface, like a cube or a sphere including the data set $S$. The problem is that such structures lie far away from the desired surface. We would have to evolve the PDE for a long time and thus the algorithm would be expensive. A good inital surface guess helps to seepd up the convergence to the equilibrium surface. A good initial guess also avoid local minimum of energy which are undesired. The outer level contour of the distance function $d(x) = \epsilon$ encloses the data and is a very good guess. We use a simple tagging algorithm to construct the outer surface. We label all the points on the edge of the grid as exterior points. Then, if $(i,j,k)$ is an exterior point, we find the neighbours $(i\pm 1,j\pm 1,k\pm 1)$ such that $d_{i\pm 1,j\pm 1,k\pm 1} \se \epsilon$ that have not been tagged yet. We then tagged them and continue the search from the new neighbours. We also tagged the points that are in contact to the exterior points as boundary points.
+
+We know need to find the signed distance function $sdf(x)$ to this exterior contour. The correct distance values for $\abs{sdf(x)}$ for exterior points and adjacent inside points are $\abs{sdf(x)} \approx \abs{d(x) - \epsilon}$. We then use this values to compute the absolute value of the $sdf$ for all the non-tagged points, using the same technique used for evaluating $d$. Then we negate the values at all interior and boundary points. $sdf(x)$ is now the signed distance function of the exterior contour.
+
+We would like to have $\epsilon$ as small as possible. However, if we choose $\epsilon$ too small, the contour consists of separated small spheres around the sample points. $\epsilon$ has to take into account the sampling density of the data set.
+
+Given the signed distance function, we can start the continuous deformation of the gradient flow, using the level set formulation. The numerical %% reference
 
 \subsection{Marching cubes algorithm}
 \label{subsec:mca}
