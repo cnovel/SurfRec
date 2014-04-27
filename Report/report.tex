@@ -51,7 +51,7 @@ We describe two different Delaunay based algorithms : the Power Crust algorithm 
 
 \subsection{Power crust algorithm}
 \label{subsec:pca}
-The Powercrust algorithm compute an approximate medial axis of the 3D point cloud $S$ using the Voronoi diagram. We then take a subset $V$ of the Voronoi vertices, called the poles. The poles lie near the medial axis. Each pole has an associated ball, called the polar ball. The polar balls approximate maximal balls contained in the interior or exterior of the 3D shape. The radii of the polar balls are the weights of the poles. The inverse transform is then approximate using the power diagram using the set of weighted poles.
+The Powercrust algorithm -- described in \cite{Powercrust}-- compute an approximate medial axis of the 3D point cloud $S$ using the Voronoi diagram. We then take a subset $V$ of the Voronoi vertices, called the poles. The poles lie near the medial axis. Each pole has an associated ball, called the polar ball. The polar balls approximate maximal balls contained in the interior or exterior of the 3D shape. The radii of the polar balls are the weights of the poles. The inverse transform is then approximate using the power diagram using the set of weighted poles.
 
 The Power Crust algorithm can be summarize in 6 steps :
 \begin{enumerate}
@@ -91,12 +91,29 @@ We know that two balls with different lables intersect shallowly. So the deeper 
 
 We have the two rules for updating the priority queue. We just have to loop until every pole is labeled, and then extract the power crust.
 
+For a better reconstruction, it is possible to omit certain poles. In the case of a noisy data set, some Voronoi cells are not well shaped, as we can see in figure~\ref{noisePC}.
+\begin{figure}[h]
+  \centering
+  \includegraphics[scale=0.3]{noise.jpg}
+  \caption{\label{noisePC} Oddly shaped Voronoi cells due to noise in the data.}
+\end{figure}
+
+Some cells are round, others don't have perpendicular borders. It is possible to discard this cells and so the poles in order to build a better MAT. 
+
+Oddly shaped cells appears also for sharp egdes. If all the cells are kept, the reconstruction is too smooth and we loose the information about the sharpness of the surface. Discarding some cells allows a better reconstruction, as shown by figure~\ref{sharpPC}.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[scale=0.3]{sharpPC.jpg}
+  \caption{\label{sharpPC} Influence of the cells on a sharp feature.}
+\end{figure}
+
 \subsection{Cocone algorithm}
-Cocone algorithm is also a Delaunay-based algorithm. The idea here is to find the restricted Delaunay Triangulation according to the surface of the 3D model. Edelsbrunner and Shah showed that the underlying space of this triangulation is homeomorphic to $S$ under certain conditions. To find the restricted Delaunay Triangulation $DT_S$, we consider the restricted Voronoi diagram $V_S$ with restricted Voronoi cells $V_{s,S} = V_s\cap S$. The dual of this restricted Voronoi diagram is $DT_S$. More precisely, the edge $pq \subset DT_S$ if and only if $V_{p,S}\cap V_{q,S} \ne \emptyset$. A triangle $pqr \subset DT_S$ if and only if $V_{p,S}\cap V_{q,S}\cap V_{r,S} \ne \emptyset$.
+The Cocone algorithm is also a Delaunay-based algorithm, described in \cite{Cocone}. The idea here is to find the restricted Delaunay Triangulation according to the surface of the 3D model. Edelsbrunner and Shah showed that the underlying space of this triangulation is homeomorphic to $S$ under certain conditions. To find the restricted Delaunay Triangulation $DT_S$, we consider the restricted Voronoi diagram $V_S$ with restricted Voronoi cells $V_{s,S} = V_s\cap S$. The dual of this restricted Voronoi diagram is $DT_S$. More precisely, the edge $pq \subset DT_S$ if and only if $V_{p,S}\cap V_{q,S} \ne \emptyset$. A triangle $pqr \subset DT_S$ if and only if $V_{p,S}\cap V_{q,S}\cap V_{r,S} \ne \emptyset$.
 
 The homeomorphic condition is called \emph{closed ball properties} and states that each $V_{s,S}$ is a topological 2-ball, each non-empty intersection $V_{p,S}\cap V_{q,S}$ is a topological 1-ball and each non-empty intersection $V_{p,S}\cap V_{q,S}\cap V_{r,S}$ is a point. Under this condition, $DT_S$ is a piecewise linear manifold homeomorphic to $S$.
 
-We introduce also the \emph{local feature size}, $f(s)$, at point $s \in S$ as the least distance between $p$ and the medial axis of $S$. $f$ is 1-Lipschitz, meaning $\abs{f(p) - f(q)}\le\abs{p - q}$.
+We introduce also the \emph{local feature size}, $f(s)$. $f(s)$ -- $s \in S$ -- is the least distance between $s$ and the medial axis of $S$. $f$ is 1-Lipschitz, meaning $\abs{f(p) - f(q)}\le\abs{p - q}$.
 
 The \emph{cocone} algorithm selects a set of candidates triangles $T$ satisfying three conditions:
 \begin{enumerate}
@@ -105,11 +122,19 @@ The \emph{cocone} algorithm selects a set of candidates triangles $T$ satisfying
 \item The normal to each triangle $t \in T$ makes a small angle $c\epsilon$ with the surface normal at the vertex $s$, where $s$ is the vertex with the largest angle in $t$ and $c$ is a constant independant of $\epsilon$.
 \end{enumerate}
 
-Let $S$ be the actual surface of the 3D model, $D$ the data set and $s \in D$ a point of the data set. We start by comptuing the Voronoi diagram $V$ of $D$. For every point $s \in D$, we call $V_s$ the associated Voronoi cell. The normal to $S$ at a point $s$ is estimated using the farthest pole of $V_s$, as introduced in the subsection~\ref{subsec:pca}. The estimated normal is the line going through $s$ and that pole. We then find the complementary cone -- \emph{cocone} -- of $V_s$. The \emph{cocone} is defined as the complement of the double cone of apex $s$ making an angle of $\frac{\pi}{2}-\theta$ with the estimated normal at $s$. In practice, $\theta\le\frac{\pi}{8}$.
+Let $S$ be the actual surface of the 3D model, $D$ the data set and $s \in D$ a point of the data set. We start by comptuing the Voronoi diagram $V$ of $D$. For every point $s \in D$, we call $V_s$ the associated Voronoi cell. The normal to $S$ at a point $s$ is estimated using the farthest pole of $V_s$, as introduced in the subsection~\ref{subsec:pca}. The estimated normal is the line going through $s$ and that pole. We then find the complementary cone -- \emph{cocone} -- of $V_s$. The \emph{cocone} is defined as the complement of the double cone of apex $s$ making an angle of $\frac{\pi}{2}-\theta$ with the estimated normal at $s$. In practice, $\theta\le\frac{\pi}{8}$. In figure~\ref{coc}, the cocone is the space between the two grey zones.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[scale=0.3]{Cocone.png}
+  \caption{\label{coc} Cocone of a Voronoi cell}
+\end{figure}
 
 We then select the edges of $V$ that intersect the cocone of their three adjacent samples. The dual triangles of these edges form the candidate set of triangles $T$. Under the assumption $\theta\le\frac{\pi}{8}$, $T$ satisfies the three conditions stated before.
 
 The next step is to remove all triangles incident to sharp edges. An edge is sharp if the angle between two consecutive triangles around this edge is superior to $\frac{3\pi}{2}$. An edge with a single incident triangle is also sharp.
+
+Once this set is performed, the remaining triangles set is the surface of the 3D object. However, it has been shown that in pratice, Cocone algorithm produce a lot of holes in the surface. \cite{Tightcocone} introduces a Water-tight cocone algorithm which produces a water-tight surface of the 3D model.
 
 %% ADD HERE WATER TIGHT COCONE %%
 
@@ -162,6 +187,7 @@ The BPA works by finding a seed triangle and use an advancing front to track whi
 \end{algorithmic}
 \end{algorithm} 
 
+\newpage 
 Two functions -- $ball\_pivot$ and $find\_seed\_triangle$ -- need an efficient way to retrieve the neighbourhood of a point. A simple solution is using a grid of small cubes, called voxels. The voxel's side is $\delta = 2\rho$. We store the data points in a list for each voxels. Given a point $s$, we can find the voxel $v$ it lies in by divided its coordinates by $\delta$. In order to look at every point that lies at a distance $\rho$ of $s$, we need to look at all the neighbours of $v$. Hence a total of 27 voxels to consider.
 
 The selection of a seed is necessary for the initialisation of the pivoting. A seed triangle is a triangle such that a $\rho$ ball with its center in the outward space touches the three points of the seed triangle and contains no other data points. A way to find a seed triangle is :
@@ -193,7 +219,7 @@ The coincident edges are removed by the \textit{glue} operation. Coincident egde
 
 
 \subsection{Fast Reconstruction algorithm (PCL)}
-The Point Cloud Library is an open-source library for processing point clouds. It provides a greedy algorithm for reconstructing a surface from an unorganized point cloud as fast as possible. The idea is simple: for each point $s$, project its neighbourhood on the average plane, add edges according to visibility and go back to the 3D space. The algorithm is largely inspired by %tofill
+The Point Cloud Library is an open-source library for processing point clouds. It provides a greedy algorithm for reconstructing a surface from an unorganized point cloud as fast as possible, described in \cite{PCL1}. The idea is simple: for each point $s$, project its neighbourhood on the average plane, add edges according to visibility and go back to the 3D space. The algorithm is largely inspired by \cite{PCL2}, which we are going to describe.
 
 This algorithm requires 2 parameters : $\mu > 1$ and $\alpha$. $\mu$ quantifies the idea of locally uniform sampling. $\alpha$ gives an upper bound on the angle between consecutive neighbors of a point on a boundary surface. $\alpha$ is a large angle, set at 120 degrees. The data points are categorized as \textit{free}, \textit{fringe}, \textit{boundary} or\textit{completed}. \textit{Free} points have no incident triangles. Points on the current boundary are labeled as \textit{fringe} or \textit{boundary}: a \textit{fringe} point has already been processed but have some missing triangles around it due to $\alpha$; a \textit{boundary} point has not yet been processed. The algorithm keep two properties true during its execution :
 \begin{itemize}
@@ -388,7 +414,7 @@ where $(x)^+ = x$ if $x > 0$, $0$ otherwise and $x_{min} = min(d_{i-1,j,k}, d_{i
 
 We use 9 sweeps of this iterative procedure, by alternating the ordering of the grid points along $x$,$y$ and $z$. This mean the first sweep is $i=1:n$, $j=1:n$ and $k=1:n$ then $i=1:n$, $j=1:n$ and $k=n:1$ then $i=1:n$, $j=n:1$ and $k=1:n$ and so on. There are 8 possible sweeps and we add one more sweep for assuring convergence.
 
-The next step is to find a good initial guess for $\Gamma$. We can initiate $\Gamma$ as a simple surface, like a cube or a sphere including the data set $S$. The problem is that such structures lie far away from the desired surface. We would have to evolve the PDE for a long time and thus the algorithm would be expensive. A good inital surface guess helps to seepd up the convergence to the equilibrium surface. A good initial guess also avoid local minimum of energy which are undesired. The outer level contour of the distance function $d(x) = \epsilon$ encloses the data and is a very good guess. We use a simple tagging algorithm to construct the outer surface. We label all the points on the edge of the grid as exterior points. Then, if $(i,j,k)$ is an exterior point, we find the neighbours $(i\pm 1,j\pm 1,k\pm 1)$ such that $d_{i\pm 1,j\pm 1,k\pm 1} \se \epsilon$ that have not been tagged yet. We then tagged them and continue the search from the new neighbours. We also tagged the points that are in contact to the exterior points as boundary points.
+The next step is to find a good initial guess for $\Gamma$. We can initiate $\Gamma$ as a simple surface, like a cube or a sphere including the data set $S$. The problem is that such structures lie far away from the desired surface. We would have to evolve the PDE for a long time and thus the algorithm would be expensive. A good inital surface guess helps to seepd up the convergence to the equilibrium surface. A good initial guess also avoid local minimum of energy which are undesired. The outer level contour of the distance function $d(x) = \epsilon$ encloses the data and is a very good guess. We use a simple tagging algorithm to construct the outer surface. We label all the points on the edge of the grid as exterior points. Then, if $(i,j,k)$ is an exterior point, we find the neighbours $(i\pm 1,j\pm 1,k\pm 1)$ such that $d_{i\pm 1,j\pm 1,k\pm 1} \geq \epsilon$ that have not been tagged yet. We then tagged them and continue the search from the new neighbours. We also tagged the points that are in contact to the exterior points as boundary points.
 
 We know need to find the signed distance function $sdf(x)$ to this exterior contour. The correct distance values for $\abs{sdf(x)}$ for exterior points and adjacent inside points are $\abs{sdf(x)} \approx \abs{d(x) - \epsilon}$. We then use this values to compute the absolute value of the $sdf$ for all the non-tagged points, using the same technique used for evaluating $d$. Then we negate the values at all interior and boundary points. $sdf(x)$ is now the signed distance function of the exterior contour.
 
@@ -410,6 +436,12 @@ The edges start and end points all lie in the middle of the edges of the cube. T
 
 Once the triangulation is done, we have to compute and orient the normals for each triangle. The normal can be easily obtain from a simple cross product of two sides of the triangle. The orientation is computed thanks to the isovalue. Considering the barycenter $b$ of $v_1$, $v_2$ and $v_3$ vertices of the triangle, if $value(b + \epsilon n) > isovalue$, then the normal is pointing inward and we must flip it. Else, we do nothing.
 
+\newpage
 \section*{Conclusion}
 \addcontentsline{toc}{section}{Conclusion}
+
+\newpage
+\addcontentsline{toc}{section}{References}
+\bibliographystyle{alpha}
+\bibliography{biblio}
 \end{document}
