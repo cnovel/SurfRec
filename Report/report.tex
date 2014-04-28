@@ -1,4 +1,19 @@
-\documentclass[a4paper]{article}
+\documentclass[12pt]{article}
+
+\usepackage{geometry}
+\geometry{a4paper}
+\geometry{margin=2.5cm,top=2cm,bottom=2cm}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+\renewcommand{\sectionmark}[1]{ \markright{#1}{} }
+\lhead{Cyril NOVEL (cbn13)}\chead{}\rhead{\textit{ \nouppercase{\rightmark}}}
+\lfoot{}\cfoot{\thepage\ of \pageref{LastPage}}\rfoot{}
+
+\setlength{\headheight}{15pt}
+
 
 \usepackage[english]{babel}
 \usepackage[utf8]{inputenc}
@@ -27,8 +42,8 @@
 
 \newpage
 
-\section*{Introduction}
 \addcontentsline{toc}{section}{Introduction}
+\section*{Introduction}
 In the last decades, numerous devices have been developped in order to capture and digitize our world. Among them, 3D scanners aim at capturing the geometry of the objects surounding us. Statues, monuments but also industrial parts, landscapes : all these can be digitized into a 3D point cloud. But a 3D point cloud isn't enough for a correct visualization by human beings. Thus the reconstruction of the surface is needed to obtain a more comprehensible object.
 
 Because of the numerous fields it covers -- cultural, industrial, medical -- Surface reconstruction is a widely studied subject in Computer Science. In this report, we will present the three main categories of algorithms used to perform surface reconstruction. For each category we will describe two or more precise algorithms.
@@ -68,7 +83,6 @@ The Power crust algorithm uses the notion of the \textit{Medial Axis Transform}.
 The \textit{Medial Axis Transform} of $F$ is the set of medial balls of F. The centers of the medial balls form the medial axis of $F$. The medial axis includes a part inside of $F$ and a part outside of $F$. The medial axis of a three-dimensional object is generally a two-dimensional surface.
 
 Assuming a dense sampling, the Voronoi cell of every point of the data set is long, skinny and \textit{perpendicular} to the surface. It happens because in directions tangent to the surface the Voronoi cell is limited by the very close neighbors. So the Voronoi cell extends perpendicularly away from the surface and cannot extend farther than the medial axis. There it is not the closest point anymore -- due to the nature of the medial axis. Thus, the Voronoi vertices at the two ends of the long, skinny Voronoi cell should lie near the median axis. This motivates the selection of poles as an approximation of the median axis.
-
 
 In pratice, the selection of the poles is done as follow : compute the Voronoi diagram of $S$, with a surrounding box of 8 vertices in order to avoid infinite edges. For each point $s \in S$, find the farthest vertex of the corresponding Voronoi cell, $p_1$. $p_1$ is the first pole of $s$. Then find the farthest vertex $p_2$ of the corresponding cell, such that $p_2.p_1 < 0$. $p_2$ is the second pole of $s$.
 
@@ -147,7 +161,14 @@ A classic region-growing algorithm begins by initiating a triangle as an initial
 We describe two different region-growing algorithms : the Ball Point algorithm and the Fast Reconstruction algorithm of the Point Cloud Library.
 
 \subsection{Ball Point algorithm}
-The idea of the BPA is very simple : three points form a triangle if a ball of radius $\rho$ touches them without containing any other points. Starting with a seed triangle, the sphere pivots around an edge of the triangle until it touches another point. It then formed a new triangle. We loop this process until all reachable edges have been considered.
+The idea of the BPA is very simple : three points form a triangle if a ball of radius $\rho$ touches them without containing any other points. Starting with a seed triangle, the sphere pivots around an edge of the triangle until it touches another point. It then formed a new triangle. We loop this process until all reachable edges have been considered. We give an illustration of the processus in 2D in figure~\ref{bpa2D}.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[scale=0.5]{BPA.png}
+  \caption{\label{bpa2D} The BPA in 2D.}
+\end{figure}
+
 
 Let $M$ be the surface of the 3D object and $S$ be the sampling points of $M$. For every point $s \in S$, we have the geometric position and the normal orientation. We make a sampling assumption: $S$ is dense enough so that no ball with radius $\rho$ can go through the surface without touching sample points.
 
@@ -187,7 +208,7 @@ The BPA works by finding a seed triangle and use an advancing front to track whi
 \end{algorithmic}
 \end{algorithm} 
 
-\newpage 
+%\newpage 
 Two functions -- $ball\_pivot$ and $find\_seed\_triangle$ -- need an efficient way to retrieve the neighbourhood of a point. A simple solution is using a grid of small cubes, called voxels. The voxel's side is $\delta = 2\rho$. We store the data points in a list for each voxels. Given a point $s$, we can find the voxel $v$ it lies in by divided its coordinates by $\delta$. In order to look at every point that lies at a distance $\rho$ of $s$, we need to look at all the neighbours of $v$. Hence a total of 27 voxels to consider.
 
 The selection of a seed is necessary for the initialisation of the pivoting. A seed triangle is a triangle such that a $\rho$ ball with its center in the outward space touches the three points of the seed triangle and contains no other data points. A way to find a seed triangle is :
@@ -215,6 +236,18 @@ The coincident edges are removed by the \textit{glue} operation. Coincident egde
 \begin{enumerate}
 \item $e_{i,k}$ and $e_{k,i}$ are in the same linked list. We just have to removed them, since they are consecutive in the linked list.
 \item $e_{i,k}$ and $e_{k,i}$ are in different linked lists, respectively $l_1$ and $l_2$. We remove $e_{i,k}$ from $l_1$ and called $l_{1,start}$ the first part of $l_1$ and $l_{1,end}$ the last part of $l_1$. We do the same thing with $l_2$. Then $l_1 = l_{1,start}+l_{2,end}$ and $l_2 = l_{2,start}+l_{1,end}$.
+
+The join and glue operations are illustrated in figure~\ref{joinglue}.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[scale=0.5]{joinglue.png}
+  \caption{\label{joinglue} Illustration of join and glue operations. (a) A new triangle is added to the existing front. The four vertices inside the circle all represent a single data point. (b) A join operation removes an edge and creates two new front edges, coincident with existing ones. (c) A glue operation removes one edge. (d) A second glue operation removes the other edge. A new triangle is to be added. (e) Only one of the edges created by this join is coincident with an existing edge. (f) One glue removes the duplicate pair.
+}
+\end{figure}
+
+%% FINISH PARAGRAPH
+
 \end{enumerate}
 
 
@@ -239,7 +272,16 @@ Among the points in $C^p_s$, some points are not visible from $s$. We have to re
 Only the \emph{boundary edges} of the points in $C_s$ can be possible occluding edges between $s$ and $C^p_s$.
 \end{mydef}
 
-The remaining points are ordered and stored in $C^f_s$. Then we perform the triangulation step. The points in $C^f_s$ are connected to $s$. If the angle between two consecutive points is less than $\alpha$, the two points are connected with a \emph{boundary edge}. If an edge already exists, then we label it as an \emph{internal edge}. If the angle is greater than $\alpha$, then the two points are not connected to each others. We label the edges starting from $s$ accordingly to the triangles formed. If $s$ is surrounded by triangles, $s$ is labeled as \emph{completed}. Else $s$ is labeled as \emph{boundary}. All the \emph{free} points in $C^f_s$ are labeled as \emph{fringe} points and are append to the queue of points to process.
+The remaining points are ordered and stored in $C^f_s$. Then we perform the triangulation step. The points in $C^f_s$ are connected to $s$. If the angle between two consecutive points is less than $\alpha$, the two points are connected with a \emph{boundary edge}. If an edge already exists, then we label it as an \emph{internal edge}. If the angle is greater than $\alpha$, then the two points are not connected to each others. We label the edges starting from $s$ accordingly to the triangles formed. If $s$ is surrounded by triangles, $s$ is labeled as \emph{completed}. Else $s$ is labeled as \emph{boundary}. All the \emph{free} points in $C^f_s$ are labeled as \emph{fringe} points and are append to the queue of points to process. An illustration of the triangulation step is given in figure~\ref{proj}.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[scale=0.5]{proj.png}
+  \caption{\label{proj} (a) is an illustration of the visibility pruning around $s$. The black points are behind $s$ and can not be seen. The visibility for the red point shows that $s$ is invisible to the red point, thus the red point is invisible to $s$. The white point is occluded by boundary edges. (b) Completed mesh at $s$.
+}
+\end{figure}
+
+%% FINISH PARAGRAPH
 
 \newpage
 
@@ -422,23 +464,34 @@ We would like to have $\epsilon$ as small as possible. However, if we choose $\e
 
 Given the signed distance function, we can start the continuous deformation of the gradient flow, using the level set formulation. The numerical %% reference
 
+%% CONCLUSION
+
 \subsection{Marching cubes algorithm}
 \label{subsec:mca}
 The marching cubes algorithm is used to triangulate isosurfaces. The previously described algorithms give us the isosurface of the 3D object but we can't easily represent it. The MCA creates a triangle model from the isosurface.
 
 A 3D grid is created so that it covers entirely the 3D model. The idea is to evaluate the signed distance function or the indicator function for each vertex of each cube. Depending on which vertices are inside the model and which vertices are outside the model, we trace different triangles.
 
-Since there are eight vertices in each cube and two possible states, there are $2^8 = 256$ ways the isosurface can intersect a cube. However we can reduce the number of cases due to two different symmetries. First, the topology of the triangulated surface is unchanged if we reverse the states of cube vertices. Complementary cases, where vertices greater than the isovalue are interchanger with those lesser, are equivalent. So only cases from zero to four vertices greater than the surface values have to be considered. This shrinks down the number of different cases to 128. Using rotational symmetry, we reduced the problems to 15 cases.
+Since there are eight vertices in each cube and two possible states, there are $2^8 = 256$ ways the isosurface can intersect a cube. However we can reduce the number of cases due to two different symmetries. First, the topology of the triangulated surface is unchanged if we reverse the states of cube vertices. Complementary cases, where vertices greater than the isovalue are interchanger with those lesser, are equivalent. So only cases from zero to four vertices greater than the surface values have to be considered. This shrinks down the number of different cases to 128. Using rotational symmetry, we reduced the problems to 15 cases, illustrated in figure~\ref{mcCases}
 
-%% ILLUSTRATION OF THE 15 CASES %%
+\begin{figure}[h]
+  \centering
+  \includegraphics[scale=0.7]{mcCases.png}
+  \caption{\label{mcCases} 15 possible cases in the marching cubes algorithm.
+}
+\end{figure}
 
 The edges start and end points all lie in the middle of the edges of the cube. This allows continuity of the triangulated surface.
 
 Once the triangulation is done, we have to compute and orient the normals for each triangle. The normal can be easily obtain from a simple cross product of two sides of the triangle. The orientation is computed thanks to the isovalue. Considering the barycenter $b$ of $v_1$, $v_2$ and $v_3$ vertices of the triangle, if $value(b + \epsilon n) > isovalue$, then the normal is pointing inward and we must flip it. Else, we do nothing.
 
+%% IMPROVEMENT MC
+
 \newpage
 \section*{Conclusion}
 \addcontentsline{toc}{section}{Conclusion}
+
+%% CONCLUSION
 
 \newpage
 \addcontentsline{toc}{section}{References}
