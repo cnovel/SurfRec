@@ -8,7 +8,7 @@ void writeHeader(std::ofstream &plyFile, int nbVertices, int nbTriangles) {
 	plyFile << "property float y\n";
 	plyFile << "property float z\n";
 	plyFile << "element face " << nbTriangles << "\n";
-	plyFile << "property list uchar int vertex_index\n";
+	plyFile << "property list uchar int vertex_indices\n";
 	plyFile << "end_header\n";
 }
 
@@ -21,6 +21,6 @@ void writeVertices(std::ofstream &plyFile, std::vector< std::vector <Point> > tr
 }
 void writeTriangles(std::ofstream &plyFile, int nbTriangles) {
 	for (int i = 0; i < nbTriangles; i++) {
-		plyFile << i*3 << " " << i*3 +1 << " " << i*3 +2 << "\n";
+		plyFile << 3 << " " << i*3 << " " << i*3 +1 << " " << i*3 +2 << "\n";
 	}
 }
