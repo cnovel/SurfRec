@@ -39,6 +39,7 @@ bool insideModel(Point p, float isovalue = 0) {
 
 std::vector< std::vector <Point> > cubeProcessing(Cube c, std::vector< std::vector<int> > rotations, float res) {
 	std::vector<int> markedVertices;
+
 	int nbPointsInside = 0;
 	bool swap = false;
 	for (int i = 0; i < c.listOfPoints.size(); i++) {
@@ -52,7 +53,10 @@ std::vector< std::vector <Point> > cubeProcessing(Cube c, std::vector< std::vect
 
 	if (nbPointsInside > 4) {
 		for (int i = 0; i < 8; i++) {
-			markedVertices[i] = (markedVertices[i] == 1)?0:1;
+			if (markedVertices[i] == 1) 
+				markedVertices[i] = 0;
+			else
+				markedVertices[i] = 1;
 		}
 	}
 
@@ -69,24 +73,29 @@ std::vector< std::vector <Point> > cubeProcessing(Cube c, std::vector< std::vect
 			}
 		}
 	}
-
 }
 
 int main(int argc, char** argv) {
-	Point bottomPoint = Point(-4.0, -4.0, -4.0);
-	Point topPoint = Point(4.0, 4.0, 4.0);
-
+	Point bottomPoint = Point(-3.0, -3.0, -3.0);
+	Point topPoint = Point(3.0, 3.0, 3.0);
+	
 	float res = .2;
 	Grid g = Grid(topPoint, bottomPoint, res);
 
 	std::vector< std::vector <Point> > trianglesList;
 	std::vector< std::vector<int> > rotations = createRotationTable();
 
+	std::cout << " Oyo!!" << std::endl;
+	
 	for (int i = 0; i < g.listOfCubes.size(); i++) {
+
+		std::cout << i << "/" << g.listOfCubes.size() << std::endl;
 		std::vector< std::vector <Point> > newTriangles = cubeProcessing(g.listOfCubes[i], rotations, res);
+
 		if (newTriangles.size() != 0)
 			trianglesList.insert(trianglesList.end(), newTriangles.begin(), newTriangles.end());
 	}
+	
 
 	int nbVertices = 3 * trianglesList.size();
 	int nbTriangles = trianglesList.size();
@@ -97,6 +106,7 @@ int main(int argc, char** argv) {
   	writeVertices(plyFile, trianglesList);
   	writeTriangles(plyFile, nbTriangles);
   	plyFile.close();
+  	
 
 	return 0;
 }
