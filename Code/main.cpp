@@ -9,10 +9,14 @@
 #include <iostream>
 #include <vector>
 
+#include <iostream>
+#include <fstream>
+
 #include "grid.h"
 #include "point.h"
 #include "cube.h"
 #include "code.h"
+#include "plywriter.h"
 
 bool insideModel(Point p, float isovalue = 0) {
 	//* Torus equation
@@ -57,9 +61,15 @@ std::vector< std::vector <Point> > cubeProcessing(Cube c, std::vector< std::vect
 	for (int i = 0; i < rotations.size(); i++) {
 		code = computeRotatedCode(markedVertices, rotations[i]);
 		if (acceptable(code)) {
-			return triangles(code, res, rotations[i], c);
+			std::vector< std::vector <Point> > cubeTriangles = triangles(code, res, rotations[i], c);
+			if (nbPointsInside <= 4) {
+				return cubeTriangles;
+			} else {
+				return invertTriangles(cubeTriangles);
+			}
 		}
 	}
+
 }
 
 int main(int argc, char** argv) {
@@ -74,11 +84,19 @@ int main(int argc, char** argv) {
 
 	for (int i = 0; i < g.listOfCubes.size(); i++) {
 		std::vector< std::vector <Point> > newTriangles = cubeProcessing(g.listOfCubes[i], rotations, res);
-		trianglesList.insert(trianglesList.end(), newTriangles.begin(), newTriangles.end());
+		if (newTriangles.size() != 0)
+			trianglesList.insert(trianglesList.end(), newTriangles.begin(), newTriangles.end());
 	}
 
 	int nbVertices = 3 * trianglesList.size();
 	int nbTriangles = trianglesList.size();
+
+	std::ofstream plyFile;
+  	plyFile.open("mcResult.ply");
+  	writeHeader(plyFile, nbVertices, nbTriangles);
+  	writeVertices(plyFile, trianglesList);
+  	writeTriangles(plyFile, nbTriangles);
+  	plyFile.close();
 
 	return 0;
 }
