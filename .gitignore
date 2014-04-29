@@ -1,3 +1,5 @@
 /Report/*.pdf
 /Report/*.aux
 /Report/*.log
+
+/Report/*.o
