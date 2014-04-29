@@ -2,27 +2,27 @@
 
 std::vector< std::vector <Point> > triangles(int code, float res, std::vector<int> rotation, Cube c) {
 	std::vector< std::vector <Point> > triangles;
+	std::vector<Point> t1;
+	std::vector<Point> t2;
+	std::vector<Point> t3;
+	std::vector<Point> t4;
 	switch(code) {
 		case 0:
-			return null;
+			return triangles;
 			break;
 
 		case 1:
-			std::vector<Point> t1;
 			t1.push_back(meanPoint(c.listOfPoints[rotation[0]], c.listOfPoints[rotation[3]]));
 			t1.push_back(meanPoint(c.listOfPoints[rotation[0]], c.listOfPoints[rotation[4]]));
 			t1.push_back(meanPoint(c.listOfPoints[rotation[0]], c.listOfPoints[rotation[1]]));
-			triangles.push_back(t1);
 			return triangles;
 			break;
 
 		case 3:
-			std::vector<Point> t1;
 			t1.push_back(meanPoint(c.listOfPoints[rotation[0]], c.listOfPoints[rotation[3]]));
 			t1.push_back(meanPoint(c.listOfPoints[rotation[0]], c.listOfPoints[rotation[4]]));
 			t1.push_back(meanPoint(c.listOfPoints[rotation[1]], c.listOfPoints[rotation[5]]));
 			triangles.push_back(t1);
-			std::vector<Point> t2;
 			t2.push_back(meanPoint(c.listOfPoints[rotation[1]], c.listOfPoints[rotation[2]]));
 			t2.push_back(meanPoint(c.listOfPoints[rotation[0]], c.listOfPoints[rotation[3]]));
 			t2.push_back(meanPoint(c.listOfPoints[rotation[1]], c.listOfPoints[rotation[5]]));
@@ -31,12 +31,10 @@ std::vector< std::vector <Point> > triangles(int code, float res, std::vector<in
 			break;
 
 		case 33:
-			std::vector<Point> t1;
 			t1.push_back(meanPoint(c.listOfPoints[rotation[0]], c.listOfPoints[rotation[3]]));
 			t1.push_back(meanPoint(c.listOfPoints[rotation[0]], c.listOfPoints[rotation[4]]));
 			t1.push_back(meanPoint(c.listOfPoints[rotation[0]], c.listOfPoints[rotation[1]]));
 			triangles.push_back(t1);
-			std::vector<Point> t2;
 			t2.push_back(meanPoint(c.listOfPoints[rotation[5]], c.listOfPoints[rotation[6]]));
 			t2.push_back(meanPoint(c.listOfPoints[rotation[5]], c.listOfPoints[rotation[1]]));
 			t2.push_back(meanPoint(c.listOfPoints[rotation[5]], c.listOfPoints[rotation[4]]));
@@ -45,12 +43,10 @@ std::vector< std::vector <Point> > triangles(int code, float res, std::vector<in
 			break;
 
 		case 65:
-			std::vector<Point> t1;
 			t1.push_back(meanPoint(c.listOfPoints[rotation[0]], c.listOfPoints[rotation[3]]));
 			t1.push_back(meanPoint(c.listOfPoints[rotation[0]], c.listOfPoints[rotation[4]]));
 			t1.push_back(meanPoint(c.listOfPoints[rotation[0]], c.listOfPoints[rotation[1]]));
 			triangles.push_back(t1);
-			std::vector<Point> t2;
 			t2.push_back(meanPoint(c.listOfPoints[rotation[6]], c.listOfPoints[rotation[7]]));
 			t2.push_back(meanPoint(c.listOfPoints[rotation[6]], c.listOfPoints[rotation[2]]));
 			t2.push_back(meanPoint(c.listOfPoints[rotation[6]], c.listOfPoints[rotation[5]]));
@@ -58,12 +54,95 @@ std::vector< std::vector <Point> > triangles(int code, float res, std::vector<in
 			return triangles;
 			break;
 
+		case 14:
+			t1.push_back(meanPoint(c.listOfPoints[rotation[3]], c.listOfPoints[rotation[7]]));
+			t1.push_back(meanPoint(c.listOfPoints[rotation[1]], c.listOfPoints[rotation[5]]));
+			t1.push_back(meanPoint(c.listOfPoints[rotation[2]], c.listOfPoints[rotation[6]]));
+			triangles.push_back(t1);
+			t2.push_back(meanPoint(c.listOfPoints[rotation[3]], c.listOfPoints[rotation[7]]));
+			t2.push_back(meanPoint(c.listOfPoints[rotation[3]], c.listOfPoints[rotation[0]]));
+			t2.push_back(meanPoint(c.listOfPoints[rotation[1]], c.listOfPoints[rotation[5]]));
+			triangles.push_back(t2);
+			t3.push_back(meanPoint(c.listOfPoints[rotation[0]], c.listOfPoints[rotation[3]]));
+			t3.push_back(meanPoint(c.listOfPoints[rotation[0]], c.listOfPoints[rotation[1]]));
+			t3.push_back(meanPoint(c.listOfPoints[rotation[1]], c.listOfPoints[rotation[5]]));
+			triangles.push_back(t3);
+			return triangles;
+			break;
+
+		case 67:
+			t1.push_back(meanPoint(c.listOfPoints[rotation[0]], c.listOfPoints[rotation[3]]));
+			t1.push_back(meanPoint(c.listOfPoints[rotation[0]], c.listOfPoints[rotation[4]]));
+			t1.push_back(meanPoint(c.listOfPoints[rotation[1]], c.listOfPoints[rotation[5]]));
+			triangles.push_back(t1);
+			t2.push_back(meanPoint(c.listOfPoints[rotation[1]], c.listOfPoints[rotation[2]]));
+			t2.push_back(meanPoint(c.listOfPoints[rotation[0]], c.listOfPoints[rotation[3]]));
+			t2.push_back(meanPoint(c.listOfPoints[rotation[1]], c.listOfPoints[rotation[5]]));
+			triangles.push_back(t2);
+			t3.push_back(meanPoint(c.listOfPoints[rotation[6]], c.listOfPoints[rotation[7]]));
+			t3.push_back(meanPoint(c.listOfPoints[rotation[6]], c.listOfPoints[rotation[2]]));
+			t3.push_back(meanPoint(c.listOfPoints[rotation[6]], c.listOfPoints[rotation[5]]));
+			triangles.push_back(t3);
+			return triangles;
+			break;
+
+		case 82:
+			t1.push_back(meanPoint(c.listOfPoints[rotation[1]], c.listOfPoints[rotation[2]]));
+			t1.push_back(meanPoint(c.listOfPoints[rotation[1]], c.listOfPoints[rotation[0]]));
+			t1.push_back(meanPoint(c.listOfPoints[rotation[1]], c.listOfPoints[rotation[5]]));
+			triangles.push_back(t1);
+			t2.push_back(meanPoint(c.listOfPoints[rotation[4]], c.listOfPoints[rotation[7]]));
+			t2.push_back(meanPoint(c.listOfPoints[rotation[4]], c.listOfPoints[rotation[5]]));
+			t2.push_back(meanPoint(c.listOfPoints[rotation[4]], c.listOfPoints[rotation[0]]));
+			triangles.push_back(t2);
+			t3.push_back(meanPoint(c.listOfPoints[rotation[6]], c.listOfPoints[rotation[7]]));
+			t3.push_back(meanPoint(c.listOfPoints[rotation[6]], c.listOfPoints[rotation[2]]));
+			t3.push_back(meanPoint(c.listOfPoints[rotation[6]], c.listOfPoints[rotation[5]]));
+			triangles.push_back(t3);
+			return triangles;
+			break;
+
+		case 15:
+			t1.push_back(meanPoint(c.listOfPoints[rotation[0]], c.listOfPoints[rotation[4]]));
+			t1.push_back(meanPoint(c.listOfPoints[rotation[2]], c.listOfPoints[rotation[6]]));
+			t1.push_back(meanPoint(c.listOfPoints[rotation[3]], c.listOfPoints[rotation[7]]));
+			triangles.push_back(t1);
+			t2.push_back(meanPoint(c.listOfPoints[rotation[0]], c.listOfPoints[rotation[4]]));
+			t2.push_back(meanPoint(c.listOfPoints[rotation[1]], c.listOfPoints[rotation[5]]));
+			t2.push_back(meanPoint(c.listOfPoints[rotation[2]], c.listOfPoints[rotation[6]]));
+			triangles.push_back(t2);
+			return triangles;
+			break;
+
+		case 141:
+			t1.push_back(meanPoint(c.listOfPoints[rotation[7]], c.listOfPoints[rotation[4]]));
+			t1.push_back(meanPoint(c.listOfPoints[rotation[0]], c.listOfPoints[rotation[4]]));
+			t1.push_back(meanPoint(c.listOfPoints[rotation[6]], c.listOfPoints[rotation[7]]));
+			triangles.push_back(t1);
+			t2.push_back(meanPoint(c.listOfPoints[rotation[0]], c.listOfPoints[rotation[4]]));
+			t2.push_back(meanPoint(c.listOfPoints[rotation[0]], c.listOfPoints[rotation[1]]));
+			t2.push_back(meanPoint(c.listOfPoints[rotation[6]], c.listOfPoints[rotation[7]]));
+			triangles.push_back(t2);
+			t3.push_back(meanPoint(c.listOfPoints[rotation[6]], c.listOfPoints[rotation[7]]));
+			t3.push_back(meanPoint(c.listOfPoints[rotation[0]], c.listOfPoints[rotation[1]]));
+			t3.push_back(meanPoint(c.listOfPoints[rotation[6]], c.listOfPoints[rotation[2]]));
+			triangles.push_back(t3);
+			t4.push_back(meanPoint(c.listOfPoints[rotation[6]], c.listOfPoints[rotation[2]]));
+			t4.push_back(meanPoint(c.listOfPoints[rotation[0]], c.listOfPoints[rotation[1]]));
+			t4.push_back(meanPoint(c.listOfPoints[rotation[1]], c.listOfPoints[rotation[2]]));
+			triangles.push_back(t4);
+			return triangles;
+			break;
+
+		case 85:
+			return triangles;
+			break;
 
 	}
 }
 
 bool acceptable(int code) {
-	return (code == 0 || code == 1 || code == 3 || code == 33 || code == 65 || code == 14 || code == 67 || code == 82 || code == 15 || code == 141 || code == 85 || code == 77 || code == 30 || code == 165  || code == 142) 
+	return (code == 0 || code == 1 || code == 3 || code == 33 || code == 65 || code == 14 || code == 67 || code == 82 || code == 15 || code == 141 || code == 85 || code == 77 || code == 30 || code == 165  || code == 142);
 }
 
 int computeCode(std::vector<int> v) {
@@ -162,30 +241,4 @@ std::vector< std::vector<int> > createRotationTable() {
 	rotationTable.push_back(r24);
 
 	return rotationTable;
-}
-
-std::vector< std::vector <std::pair<int, int> > > triangles(int code) {
-	std::vector< std::vector <std::pair<int, int> > > res;
-	switch(code):
-		case 1:
-		std::vector<std::pair<int, int> > v;
-		std::pair <int,int> e1 (0,3);
-		std::pair <int,int> e2 (0,4);
-		std::pair <int,int> e3 (0,1);
-		v.push_back(e1);
-		v.push_back(e2);
-		v.push_back(e3);
-		res.push_back(v);
-		return res;
-		break;
-
-		case 3:
-		std::vector<std::pair<int, int> > v;
-		std::pair <int,int> e1 (0,3);
-		std::pair <int,int> e2 (0,4);
-		std::pair <int,int> e3 (1,5);
-		v.push_back(e1);
-		v.push_back(e2);
-		v.push_back(e3);
-
 }

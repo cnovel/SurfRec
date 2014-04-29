@@ -1,6 +1,8 @@
 #ifndef DEF_CUBE
 #define DEF_CUBE
 
+#include <vector>
+
 #include "point.h"
 
 /* The list of points is stored like this :
@@ -16,6 +18,7 @@
 */
 class Cube {
     public:
+      Cube(Point p, float res);
     	std::vector<Point> listOfPoints;
 };
 
