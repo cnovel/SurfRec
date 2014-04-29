@@ -53,10 +53,7 @@ std::vector< std::vector <Point> > cubeProcessing(Cube c, std::vector< std::vect
 
 	if (nbPointsInside > 4) {
 		for (int i = 0; i < 8; i++) {
-			if (markedVertices[i] == 1) 
-				markedVertices[i] = 0;
-			else
-				markedVertices[i] = 1;
+			markedVertices[i] = (markedVertices[i] == 1)?0:1;
 		}
 	}
 
@@ -85,17 +82,19 @@ int main(int argc, char** argv) {
 	std::vector< std::vector <Point> > trianglesList;
 	std::vector< std::vector<int> > rotations = createRotationTable();
 
-	std::cout << " Oyo!!" << std::endl;
+	std::cout << "Processing of each cubes ... ";
 	
 	for (int i = 0; i < g.listOfCubes.size(); i++) {
+		int f = (int)(((float) i)*100.0/((float) g.listOfCubes.size()));
+		if (i%1000 == 0)
+			std::cout << f << "%... ";
 
-		std::cout << i << "/" << g.listOfCubes.size() << std::endl;
 		std::vector< std::vector <Point> > newTriangles = cubeProcessing(g.listOfCubes[i], rotations, res);
 
 		if (newTriangles.size() != 0)
 			trianglesList.insert(trianglesList.end(), newTriangles.begin(), newTriangles.end());
 	}
-	
+	std::cout << "done!" << std::endl;	
 
 	int nbVertices = 3 * trianglesList.size();
 	int nbTriangles = trianglesList.size();
