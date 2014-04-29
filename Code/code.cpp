@@ -257,7 +257,7 @@ int computeCode(std::vector<int> v) {
 int computeRotatedCode(std::vector<int> v, std::vector<int> rot) {
 	int code = 0;
 	for (int i = 0; i < v.size(); i++) {
-		code += v[rot[i]]*pow(2, 7-i);
+		code += v[rot[i]]*pow(2, i);
 	}
 
 	return code;
